@@ -43,12 +43,14 @@ def hsl_to_rgb(h, s, l):
     
     Parameters:
     h (float): Hue value, range [0, 360).
-    s (float): Saturation value, range [0, 1].
-    l (float): Lightness value, range [0, 1].
+    s (float): Saturation value, range [0, 100].
+    l (float): Lightness value, range [0, 100].
     
     Returns:
     (int, int, int): Corresponding RGB values (0-255 for each channel).
     """
+    s = s / 100.0
+    l = l / 100.0
     c = (1 - abs(2 * l - 1)) * s
     x = c * (1 - abs((h / 60) % 2 - 1))
     m = l - c / 2

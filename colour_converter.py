@@ -8,6 +8,10 @@ class ColourConverterPage(ttkb.Frame):  # Inherit from ttkbootstrap's Frame
         super().__init__(parent)
         self.controller = controller
 
+        # Create a container frame to center all content
+        self.container = ttk.Frame(self)
+        self.container.pack(expand=True, anchor="center")  # Center the container frame
+
         # Initialize variables
         self.color_format = tk.StringVar()
         self.color_input = tk.StringVar()
@@ -22,20 +26,20 @@ class ColourConverterPage(ttkb.Frame):  # Inherit from ttkbootstrap's Frame
         self.configure(style="TFrame")  # Apply the theme style to the frame
 
         # Color format selection dropdown
-        color_format_selector = ttkb.Combobox(self, textvariable=self.color_format, values=["RGB", "HEX", "CMYK", "HSL", "HSV"], bootstyle="info")
+        color_format_selector = ttkb.Combobox(self.container, textvariable=self.color_format, values=["RGB", "HEX", "CMYK", "HSL", "HSV"], bootstyle="info")
         color_format_selector.grid(column=0, row=0, columnspan=2, sticky=(tk.W, tk.E))
         color_format_selector.set("HEX")
 
         # Input entry for color value
-        color_input_entry = ttkb.Entry(self, textvariable=self.color_input, width=25, bootstyle="info")
+        color_input_entry = ttkb.Entry(self.container, textvariable=self.color_input, width=25, bootstyle="info")
         color_input_entry.grid(column=0, row=1, columnspan=2, sticky=(tk.W, tk.E))
 
         # Convert button
-        convert_button = ttkb.Button(self, text="Convert", command=self.convert_color, bootstyle="primary")
+        convert_button = ttkb.Button(self.container, text="Convert", command=self.convert_color, bootstyle="primary")
         convert_button.grid(column=2, row=1, sticky=(tk.W, tk.E))
 
         # Display area for the color
-        self.color_display = tk.Label(self, width=10, height=5, bg='#fff', relief='solid')
+        self.color_display = tk.Label(self.container, width=10, height=5, bg='#fff', relief='solid')
         self.color_display.grid(column=0, row=2, rowspan=5, sticky=(tk.W, tk.E, tk.N, tk.S))
 
         # Labels and read-only entries for the color values
@@ -43,17 +47,17 @@ class ColourConverterPage(ttkb.Frame):  # Inherit from ttkbootstrap's Frame
         variables = [self.rgb_value, self.hsl_value, self.hsv_value, self.cmyk_value, self.hex_value_var]
 
         for i, (label_text, var) in enumerate(zip(labels, variables), start=2):
-            label = ttkb.Label(self, text=label_text, bootstyle="info")
+            label = ttkb.Label(self.container, text=label_text, bootstyle="info")
             label.grid(column=1, row=i, sticky=tk.W)
-            entry = ttkb.Entry(self, textvariable=var, state='readonly', bootstyle="info")
+            entry = ttkb.Entry(self.container, textvariable=var, state='readonly', bootstyle="info")
             entry.grid(column=2, row=i, sticky=(tk.W, tk.E))
 
         # Error label
-        self.error_label = ttkb.Label(self, text="", bootstyle="danger")
+        self.error_label = ttkb.Label(self.container, text="", bootstyle="danger")
         self.error_label.grid(column=0, row=7, columnspan=3, sticky=tk.W)
 
         # Configure padding for all widgets
-        for child in self.winfo_children():
+        for child in self.container.winfo_children():
             child.grid_configure(padx=5, pady=5)
 
     def convert_color(self):

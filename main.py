@@ -17,7 +17,7 @@ class MainApplication(tk.Tk):
         self.title("Color Converter")
         
         # Set the window size
-        self.geometry("1000x800")
+        self.geometry("800x700")
         # Navigation Bar Frame
         nav_bar = ttk.Frame(self)
         nav_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=5, pady=5)

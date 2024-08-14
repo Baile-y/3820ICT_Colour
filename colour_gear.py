@@ -7,104 +7,77 @@ import math
 
 class ColourGearPage(ttk.Frame):
     def __init__(self, parent, controller):
-        """
-         Initialize the color wheel. This is where you create the canvas and bind it to the motion event
-         
-         @param parent - The parent window of the widget
-         @param controller - The controller that manages the view of the
-        """
         super().__init__(parent)
         self.controller = controller
 
         # Initialize variables
-        self.size = 300  # Size for the color wheel
+        self.size = 300  # Size for the colour wheel
         self.current_harmony = tk.StringVar(value="Complementary")
 
-        # Create the color wheel
-        self.color_wheel = self.create_color_wheel(self.size)
-        self.color_wheel_tk = ImageTk.PhotoImage(self.color_wheel)
+        # Create the colour wheel
+        self.colour_wheel = self.create_colour_wheel(self.size)
+        self.colour_wheel_tk = ImageTk.PhotoImage(self.colour_wheel)
 
-        # Create the canvas to display the color wheel
+        # Create the canvas to display the colour wheel
         self.canvas = Canvas(self, width=self.size, height=self.size)
-        self.canvas.create_image((self.size // 2, self.size // 2), image=self.color_wheel_tk)
+        self.canvas.create_image((self.size // 2, self.size // 2), image=self.colour_wheel_tk)
         self.canvas.pack(pady=10)
 
         self.canvas.bind("<B1-Motion>", self.on_motion)
-
-        # Create a frame to hold the selected color label
-        self.selected_color_frame = tk.Frame(self)
-        self.selected_color_frame.pack(pady=10)
-
-        self.selected_color_label = tk.Label(self.selected_color_frame, text="Selected Color", width=18, height=2, relief="ridge", padx=5, pady=5)
-        self.selected_color_label.pack()
-
-        # Create a frame to hold the harmony color labels
-        self.info_frame = tk.Frame(self)
-        self.info_frame.pack(pady=10, fill=tk.X)
-
-        self.comp_color_label = tk.Label(self.info_frame, text="Complementary Color", width=18, height=2, relief="ridge", padx=5, pady=5)
-        self.comp_color_label.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-
-        self.label_analogous = [
-            tk.Label(self.info_frame, text="Analogous Color 1", width=18, height=2, relief="ridge", padx=5, pady=5),
-            tk.Label(self.info_frame, text="Analogous Color 2", width=18, height=2, relief="ridge", padx=5, pady=5)
-        ]
-        self.label_analogous[0].grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        self.label_analogous[1].grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-
-        self.label_triadic = [
-            tk.Label(self.info_frame, text="Triadic Color 1", width=18, height=2, relief="ridge", padx=5, pady=5),
-            tk.Label(self.info_frame, text="Triadic Color 2", width=18, height=2, relief="ridge", padx=5, pady=5)
-        ]
-        self.label_triadic[0].grid(row=2, column=0, padx=5, pady=5, sticky="ew")
-        self.label_triadic[1].grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-
-        self.label_tetradic = [
-            tk.Label(self.info_frame, text="Tetradic Color 1", width=18, height=2, relief="ridge", padx=5, pady=5),
-            tk.Label(self.info_frame, text="Tetradic Color 2", width=18, height=2, relief="ridge", padx=5, pady=5),
-            tk.Label(self.info_frame, text="Tetradic Color 3", width=18, height=2, relief="ridge", padx=5, pady=5)
-        ]
-        self.label_tetradic[0].grid(row=3, column=0, padx=5, pady=5, sticky="ew")
-        self.label_tetradic[1].grid(row=3, column=1, padx=5, pady=5, sticky="ew")
-        self.label_tetradic[2].grid(row=3, column=2, padx=5, pady=5, sticky="ew")
-
-        self.label_split_complementary = [
-            tk.Label(self.info_frame, text="Split-Complementary Color 1", width=18, height=2, relief="ridge", padx=5, pady=5),
-            tk.Label(self.info_frame, text="Split-Complementary Color 2", width=18, height=2, relief="ridge", padx=5, pady=5)
-        ]
-        self.label_split_complementary[0].grid(row=4, column=0, padx=5, pady=5, sticky="ew")
-        self.label_split_complementary[1].grid(row=4, column=1, padx=5, pady=5, sticky="ew")
 
         # Create a frame to hold the harmony type buttons
         self.harmony_buttons_frame = tk.Frame(self)
         self.harmony_buttons_frame.pack(pady=10)
 
+        # Add a label/title above the buttons to indicate their purpose
+        self.harmony_title_label = tk.Label(self.harmony_buttons_frame, text="Select Colour Harmony", font=('Arial', 12, 'bold'), fg="white", bg="gray")
+        self.harmony_title_label.pack(pady=(0, 5))
+
         self.create_harmony_buttons()
+
+        # Create a frame to hold the selected colour label
+        self.selected_colour_frame = tk.Frame(self)
+        self.selected_colour_frame.pack(pady=10)
+
+        self.selected_colour_label = tk.Label(self.selected_colour_frame, text="Selected colour", width=22, height=3, relief="ridge", padx=5, pady=5, font=('Arial', 12, 'bold'))
+        self.selected_colour_label.pack()
+
+        # Create a frame to hold the harmony colour labels
+        self.info_frame = tk.Frame(self)
+        self.info_frame.pack(pady=10)
+
+        # Center the harmony colour labels by using a grid layout
+        self.info_frame.columnconfigure(0, weight=1)
+        self.info_frame.columnconfigure(1, weight=1)
+        self.info_frame.columnconfigure(2, weight=1)
+        self.info_frame.columnconfigure(3, weight=1)
+
+        # Create placeholders for the maximum number of colors (which is 4 in the case of Tetradic)
+        self.placeholders = [
+            tk.Label(self.info_frame, text="", width=22, height=3, relief="ridge", padx=5, pady=5, font=('Arial', 10, 'bold')),
+            tk.Label(self.info_frame, text="", width=22, height=3, relief="ridge", padx=5, pady=5, font=('Arial', 10, 'bold')),
+            tk.Label(self.info_frame, text="", width=22, height=3, relief="ridge", padx=5, pady=5, font=('Arial', 10, 'bold')),
+            tk.Label(self.info_frame, text="", width=22, height=3, relief="ridge", padx=5, pady=5, font=('Arial', 10, 'bold'))
+        ]
+
+        for i, placeholder in enumerate(self.placeholders):
+            placeholder.grid(row=i // 2, column=(i % 2) * 2, columnspan=2, padx=5, pady=5, sticky="ew")
+            placeholder.grid_remove()  # Hide placeholders initially
 
         # Initialize the harmony type to update the display
         self.update_harmony(self.current_harmony.get())
 
-    def create_color_wheel(self, size):
-        """
-         Creates a color wheel. It is used to draw an image with a color wheel around the center of the screen
-         
-         @param size - The size of the color wheel
-         
-         @return The image that was created and filled with color wheel
-        """
+    def create_colour_wheel(self, size):
         image = Image.new("RGB", (size, size))
         draw = ImageDraw.Draw(image)
         center = size // 2
         radius = size // 2
 
-        # Draw the points on the center of the circle.
         for x in range(size):
-            # Draw the points on the center of the circle.
             for y in range(size):
                 dx = x - center
                 dy = y - center
                 distance = math.sqrt(dx * dx + dy * dy)
-                # Draw the point on the x y axis.
                 if distance <= radius:
                     angle = math.atan2(dy, dx)
                     hue = (angle + math.pi) / (2 * math.pi) * 360
@@ -114,29 +87,19 @@ class ColourGearPage(ttk.Frame):
         return image
 
     def on_motion(self, event):
-        """
-         Handle mouse motion events. This is called every time the mouse moves over the color wheel
-         
-         @param event - The event that triggered this function
-         
-         @return None if event is None otherwise the value of event
-        """
-        # If no event is provided we can t update the color wheel.
         if event is None:
-            # If no event is provided, we can't update the color wheel. Perhaps use a default or do nothing.
             return
         
         self.clear_circles()
         x, y = event.x, event.y
-        # draw selection circle on screen
         if 0 <= x < self.size and 0 <= y < self.size:
-            rgb = self.color_wheel.getpixel((x, y))
-            hex_color = '#{:02x}{:02x}{:02x}'.format(*rgb)
-            self.selected_color_label.config(text=f"Selected Color: {hex_color}", bg=hex_color)
+            rgb = self.colour_wheel.getpixel((x, y))
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*rgb)
+            text_colour = self.get_text_colour(rgb)
+            self.selected_colour_label.config(text=f"Selected colour: {hex_colour}", bg=hex_colour, fg=text_colour)
             self.draw_selection_circle(x, y)
             
             harmony = self.current_harmony.get()
-            # shows the harmony of the player
             if harmony == "Complementary":
                 self.show_complementary(x, y)
             elif harmony == "Analogous":
@@ -149,299 +112,175 @@ class ColourGearPage(ttk.Frame):
                 self.show_split_complementary(x, y)
 
     def clear_circles(self):
-        """
-         Clear all circles from the canvas. This is useful when you want to re - draw a
-        """
         self.canvas.delete("selection_circle")
         self.canvas.delete("complementary_circle")
-        # Delete all the canvas files and all of them.
         for i in range(2):
             self.canvas.delete(f"analogous_circle_{i}")
             self.canvas.delete(f"triadic_circle_{i}")
             self.canvas.delete(f"split_complementary_circle_{i}")
-        # Delete the circle with 3 points.
         for i in range(3):
             self.canvas.delete(f"tetradic_circle_{i}")
 
     def draw_selection_circle(self, x, y):
-        """
-         Draw a circle around the selection. It is used to select a node in the graph
-         
-         @param x - x coordinate of the circle
-         @param y - y coordinate of the circle ( top left corner
-        """
         self.canvas.delete("selection_circle")
         self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, tags="selection_circle")
 
-    def get_complementary_color(self, x, y):
-        """
-         Get the complementary color of a pixel. This is used to determine the color of the pixel that is to be used for the color wheel
-         
-         @param x - X coordinate of the pixel
-         @param y - Y coordinate of the pixel ( top left corner )
-         
-         @return Tuple of x y rgb of the complementary
-        """
+    def get_complementary_colour(self, x, y):
         center = self.size // 2
         dx = x - center
         dy = y - center
         comp_x = center - dx
         comp_y = center - dy
-        comp_rgb = self.color_wheel.getpixel((comp_x, comp_y))
+        comp_rgb = self.colour_wheel.getpixel((comp_x, comp_y))
         return comp_x, comp_y, comp_rgb
 
-    def get_analogous_colors(self, x, y):
-        """
-         Get the colors that are analogous to the pixel at x y. This is used to determine where the mouse is in the color wheel
-         
-         @param x - X coordinate of the pixel
-         @param y - Y coordinate of the pixel ( 0 - 1 )
-         
-         @return A list of 3 - tuples ( x y color
-        """
+    def get_analogous_colours(self, x, y):
         center = self.size // 2
         angle = math.atan2(y - center, x - center)
         distance = math.sqrt((x - center) ** 2 + (y - center) ** 2)
         analog_angles = [angle - math.radians(30), angle + math.radians(30)]
-        analog_colors = []
-        # Add colors to the analog_colors list of analog colors.
+        analog_colours = []
         for ang in analog_angles:
             ax = center + int(distance * math.cos(ang))
             ay = center + int(distance * math.sin(ang))
-            # Add color to analog_colors array.
             if 0 <= ax < self.size and 0 <= ay < self.size:
-                color = self.color_wheel.getpixel((ax, ay))
-                analog_colors.append((ax, ay, color))
-        return analog_colors
-
-    def get_triadic_colors(self, x, y):
-        """
-         Get the triadic colors at x y. This is used to determine where the mouse is in the middle of the color wheel
-         
-         @param x - X coordinate of the mouse
-         @param y - Y coordinate of the mouse ( must be in the range [ 0 size )
-         
-         @return A list of 3 - tuples ( x y color
-        """
+                colour = self.colour_wheel.getpixel((ax, ay))
+                analog_colours.append((ax, ay, colour))
+        return analog_colours
+    
+    def get_triadic_colours(self, x, y):
         center = self.size // 2
         angle = math.atan2(y - center, x - center)
         distance = math.sqrt((x - center) ** 2 + (y - center) ** 2)
         triadic_angles = [angle + math.radians(120), angle - math.radians(120)]
-        triadic_colors = []
-        # Add colors to triadic_colors.
+        triadic_colours = []
         for ang in triadic_angles:
             tx = center + int(distance * math.cos(ang))
             ty = center + int(distance * math.sin(ang))
-            # Add a triadic color to triadic colors.
             if 0 <= tx < self.size and 0 <= ty < self.size:
-                color = self.color_wheel.getpixel((tx, ty))
-                triadic_colors.append((tx, ty, color))
-        return triadic_colors
+                colour = self.colour_wheel.getpixel((tx, ty))
+                triadic_colours.append((tx, ty, colour))
+        return triadic_colours
 
-    def get_tetradic_colors(self, x, y):
-        """
-         Get tetradic colors at x y. This is used to determine where the mouse is in the image
-         
-         @param x - X coordinate of the mouse
-         @param y - Y coordinate of the mouse ( 0 - 1 )
-         
-         @return List of ( x y color ) tuples for the
-        """
+    def get_tetradic_colours(self, x, y):
         center = self.size // 2
         angle = math.atan2(y - center, x - center)
         distance = math.sqrt((x - center) ** 2 + (y - center) ** 2)
         tetradic_angles = [angle + math.radians(90), angle + math.radians(180), angle + math.radians(270)]
-        tetradic_colors = []
-        # Add colors to tetradic_colors.
+        tetradic_colours = []
         for ang in tetradic_angles:
             tx = center + int(distance * math.cos(ang))
             ty = center + int(distance * math.sin(ang))
-            # Add color to tetradic colors.
             if 0 <= tx < self.size and 0 <= ty < self.size:
-                color = self.color_wheel.getpixel((tx, ty))
-                tetradic_colors.append((tx, ty, color))
-        return tetradic_colors
+                colour = self.colour_wheel.getpixel((tx, ty))
+                tetradic_colours.append((tx, ty, colour))
+        return tetradic_colours
 
-    def get_split_complementary_colors(self, x, y):
-        """
-         Get the colors that should be used to split a pixel. This is a helper function for get_color_wheels ()
-         
-         @param x - X coordinate of the pixel
-         @param y - Y coordinate of the pixel ( 0 - 1 )
-         
-         @return A list of ( sx sy color ) tuples for each
-        """
+    def get_split_complementary_colours(self, x, y):
         center = self.size // 2
         angle = math.atan2(y - center, x - center)
         distance = math.sqrt((x - center) ** 2 + (y - center) ** 2)
         split_comp_angles = [angle + math.radians(150), angle - math.radians(150)]
-        split_comp_colors = []
-        # Add colors to the split_comp_colors list of colors.
+        split_comp_colours = []
         for ang in split_comp_angles:
             sx = center + int(distance * math.cos(ang))
             sy = center + int(distance * math.sin(ang))
-            # Add color to split_comp_colors. append color to split_comp_colors.
             if 0 <= sx < self.size and 0 <= sy < self.size:
-                color = self.color_wheel.getpixel((sx, sy))
-                split_comp_colors.append((sx, sy, color))
-        return split_comp_colors
+                colour = self.colour_wheel.getpixel((sx, sy))
+                split_comp_colours.append((sx, sy, colour))
+        return split_comp_colours
+
+    def clear_harmony_labels(self):
+        for placeholder in self.placeholders:
+            placeholder.grid_remove()  # Hide all placeholders initially
 
     def show_complementary(self, x, y):
-        """
-         Draw complementary circle at x y. This is a convenience method for calling
-         
-         @param x - X coordinate of upper left corner
-         @param y - Y coordinate of upper left
-        """
-        comp_x, comp_y, comp_rgb = self.get_complementary_color(x, y)
-        hex_color = '#{:02x}{:02x}{:02x}'.format(*comp_rgb)
-        self.comp_color_label.config(text=f"Complementary Color: {hex_color}", bg=hex_color)
+        self.clear_harmony_labels()
+        comp_x, comp_y, comp_rgb = self.get_complementary_colour(x, y)
+        hex_colour = '#{:02x}{:02x}{:02x}'.format(*comp_rgb)
+        text_colour = self.get_text_colour(comp_rgb)
+        self.placeholders[0].config(text=f"Colour: {hex_colour}", bg=hex_colour, fg=text_colour)
+        self.placeholders[0].grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
         self.draw_complementary_circle(comp_x, comp_y, comp_rgb)
 
     def show_analogous(self, x, y):
-        """
-         Show analogous circles. This is a wrapper around : meth : ` get_analogous_colors ` to create a list of circle labels and set the color of each circle to the hex color corresponding to the color of the corresponding axis.
-         
-         @param x - x - coordinate of the plot. It is assumed that the plot is centered on the x - axis.
-         @param y - y - coordinate of the plot. It is assumed that the plot is centered on the y - axis
-        """
-        colors = self.get_analogous_colors(x, y)
-        self.reset_labels(self.label_analogous)
-        # draws analogous circle with color
-        for i, (ax, ay, color) in enumerate(colors):
-            hex_color = '#{:02x}{:02x}{:02x}'.format(*color)
-            self.label_analogous[i].config(text=f"Analogous Color {i + 1}: {hex_color}", bg=hex_color)
-            self.draw_analogous_circle(ax, ay, color, i)
+        self.clear_harmony_labels()
+        colours = self.get_analogous_colours(x, y)
+        for i, (ax, ay, colour) in enumerate(colours):
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*colour)
+            text_colour = self.get_text_colour(colour)
+            self.placeholders[i].config(text=f"Colour {i + 1}: {hex_colour}", bg=hex_colour, fg=text_colour)
+            self.placeholders[i].grid(row=i // 2, column=(i % 2) * 2, columnspan=2, padx=5, pady=5, sticky="ew")
+            self.draw_analogous_circle(ax, ay, colour, i)
 
     def show_triadic(self, x, y):
-        """
-         Draw triadic circles at x y. This is a convenience method for the user to call : meth : ` get_triadic_colors ` and
-         
-         @param x - x coordinate of the circle
-         @param y - y coordinate of the circle ( top left corner
-        """
-        colors = self.get_triadic_colors(x, y)
-        self.reset_labels(self.label_triadic)
-        # Draw triadic colors on the label.
-        for i, (tx, ty, color) in enumerate(colors):
-            hex_color = '#{:02x}{:02x}{:02x}'.format(*color)
-            self.label_triadic[i].config(text=f"Triadic Color {i + 1}: {hex_color}", bg=hex_color)
-            self.draw_triadic_circle(tx, ty, color, i)
+        self.clear_harmony_labels()
+        colours = self.get_triadic_colours(x, y)
+        for i, (tx, ty, colour) in enumerate(colours):
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*colour)
+            text_colour = self.get_text_colour(colour)
+            self.placeholders[i].config(text=f"Colour {i + 1}: {hex_colour}", bg=hex_colour, fg=text_colour)
+            self.placeholders[i].grid(row=i // 2, column=(i % 2) * 2, columnspan=2, padx=5, pady=5, sticky="ew")
+            self.draw_triadic_circle(tx, ty, colour, i)
 
     def show_tetradic(self, x, y):
-        """
-         Draw tetradic circles. This is a convenience method for the common case where you want to draw a set of tetradic circles at a given x y position.
-         
-         @param x - X position in pixel coordinates. The origin is at the top left of the canvas.
-         @param y - Y position in pixel coordinates. The origin is at the top left of the canvas
-        """
-        colors = self.get_tetradic_colors(x, y)
-        self.reset_labels(self.label_tetradic)
-        # Draw a circle with the given color.
-        for i, (tx, ty, color) in enumerate(colors):
-            hex_color = '#{:02x}{:02x}{:02x}'.format(*color)
-            self.label_tetradic[i].config(text=f"Tetradic Color {i + 1}: {hex_color}", bg=hex_color)
-            self.draw_tetradic_circle(tx, ty, color, i)
+        self.clear_harmony_labels()
+        colours = self.get_tetradic_colours(x, y)
+        for i, (tx, ty, colour) in enumerate(colours):
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*colour)
+            text_colour = self.get_text_colour(colour)
+            self.placeholders[i].config(text=f"Colour {i + 1}: {hex_colour}", bg=hex_colour, fg=text_colour)
+            self.placeholders[i].grid(row=i // 2, column=(i % 2) * 2, columnspan=2, padx=5, pady=5, sticky="ew")
+            self.draw_tetradic_circle(tx, ty, colour, i)
 
     def show_split_complementary(self, x, y):
-        """
-         Draw the split complementary circles. This is a function that should be called by the user to draw the split complementary circles.
-         
-         @param x - X coordinate of the upper left corner of the split complementary circle
-         @param y - Y coordinate of the upper left corner of the split complementary
-        """
-        colors = self.get_split_complementary_colors(x, y)
-        self.reset_labels(self.label_split_complementary)
-        # Draw a split complementary circle with colors.
-        for i, (sx, sy, color) in enumerate(colors):
-            hex_color = '#{:02x}{:02x}{:02x}'.format(*color)
-            self.label_split_complementary[i].config(text=f"Split-Complementary Color {i + 1}: {hex_color}", bg=hex_color)
-            self.draw_split_complementary_circle(sx, sy, color, i)
+        self.clear_harmony_labels()
+        colours = self.get_split_complementary_colours(x, y)
+        for i, (sx, sy, colour) in enumerate(colours):
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*colour)
+            text_colour = self.get_text_colour(colour)
+            self.placeholders[i].config(text=f"Colour {i + 1}: {hex_colour}", bg=hex_colour, fg=text_colour)
+            self.placeholders[i].grid(row=i // 2, column=(i % 2) * 2, columnspan=2, padx=5, pady=5, sticky="ew")
+            self.draw_split_complementary_circle(sx, sy, colour, i)
 
-    def draw_complementary_circle(self, x, y, color):
-        """
-         Draw complementary circle on canvas. Note : x and y are relative to upper left corner
-         
-         @param x - x coordinate of circle centre
-         @param y - y coordinate of circle centre ( 0 0 )
-         @param color - color of circle ( hex string e. g
-        """
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % color, tags="complementary_circle")
+    def draw_complementary_circle(self, x, y, colour):
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags="complementary_circle")
 
-    def draw_analogous_circle(self, x, y, color, index):
-        """
-         Draw an analogous circle on the canvas. This is used to draw circles that don't have a color or an index
-         
-         @param x - X coordinate of the circle
-         @param y - Y coordinate of the circle. It's the same as x but with a number between 0 and 5
-         @param color - The color of the circle. It's the same as the color of the circle
-         @param index - The index of the circle in the list of
-        """
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % color, tags=f"analogous_circle_{index}")
+    def draw_analogous_circle(self, x, y, colour, index):
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags=f"analogous_circle_{index}")
 
-    def draw_triadic_circle(self, x, y, color, index):
-        """
-         Draw a triadic circle. This circle is used to indicate which part of the graph is the same as the one drawn by the graph_draw method
-         
-         @param x - x coordinate of the circle
-         @param y - y coordinate of the circle ( top left corner )
-         @param color - color of the circle ( hex string ) e. g.
-         @param index - index of the triangle in the graph ( 0 - 3
-        """
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % color, tags=f"triadic_circle_{index}")
+    def draw_triadic_circle(self, x, y, colour, index):
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags=f"triadic_circle_{index}")
 
-    def draw_tetradic_circle(self, x, y, color, index):
-        """
-         Draw tetradic circle on canvas. This is used to draw circles that are part of a battle.
-         
-         @param x - X coordinate of circle. It is assumed to be 5 * x + 5
-         @param y - Y coordinate of circle. It is assumed to be 5 * y
-         @param color - Color of circle as hex string. It is assumed to be #rrggbbaa.
-         @param index - Index of the circle in the list of tetradic
-        """
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % color, tags=f"tetradic_circle_{index}")
+    def draw_tetradic_circle(self, x, y, colour, index):
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags=f"tetradic_circle_{index}")
 
-    def draw_split_complementary_circle(self, x, y, color, index):
-        """
-         Draw split complementary circle. This circle is used to split a companion circle into two circles
-         
-         @param x - X coordinate of circle center
-         @param y - Y coordinate of circle center ( top left corner )
-         @param color - Color of circle ( hex string ) see L { draw_circle }
-         @param index - Index of the circle in OCCURS
-        """
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % color, tags=f"split_complementary_circle_{index}")
+    def draw_split_complementary_circle(self, x, y, colour, index):
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags=f"split_complementary_circle_{index}")
 
     def update_harmony(self, harmony_type):
-        """
-         Update harmony and circles. Clears old circles and resets labels
-         
-         @param harmony_type - Harmony type to set
-        """
         self.current_harmony.set(harmony_type)
-        self.clear_circles()  # Clear old circles
-        self.reset_labels()  # Reset labels to default
-        self.on_motion(None)  # Update the display based on the selected harmony type
+        self.clear_circles()
+        self.clear_harmony_labels()
+        self.on_motion(None)
+        self.highlight_selected_harmony_button()
 
     def create_harmony_buttons(self):
-        """
-         Create buttons to update harmony values. Harmony types are defined in self.
-        """
-        harmony_types = ["Complementary", "Analogous", "Triadic", "Tetradic", "Split-Complementary"]
-        # Add the harmony buttons to the frame.
+        self.harmony_buttons = {}
+        harmony_types = ["Complementary", "Analogous", "Triadic", "Split-Complementary", "Tetradic"]
         for harmony in harmony_types:
             button = tk.Button(self.harmony_buttons_frame, text=harmony, command=lambda h=harmony: self.update_harmony(h))
             button.pack(side=tk.LEFT, padx=5)
+            self.harmony_buttons[harmony] = button
 
-    def reset_labels(self, labels=None):
-        """
-         Reset labels to default. This is useful for debugging and to ensure labels don't get stuck in the middle of a plot
-         
-         @param labels - list of labels to
-        """
-        # Returns a list of labels for the component
-        if labels is None:
-            labels = [self.comp_color_label] + self.label_analogous + self.label_triadic + self.label_tetradic + self.label_split_complementary
-        # Set the background background for each label
-        for label in labels:
-            label.config(text=label.cget("text").split(":")[0] + ": #ffffff", bg="white")
+    def highlight_selected_harmony_button(self):
+        for harmony, button in self.harmony_buttons.items():
+            if harmony == self.current_harmony.get():
+                button.config(relief="sunken", bg="lightblue", fg="black")
+            else:
+                button.config(relief="raised", bg="gray", fg="black")
+
+    def get_text_colour(self, rgb):
+        """Returns black or white depending on the brightness of the background colour"""
+        brightness = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
+        return "black" if brightness > 0.5 else "white"
