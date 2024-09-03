@@ -8,7 +8,7 @@ def rgb_to_hex(r, g, b):
      
      @return Hex representation of the color in the format #RRGGB
     """
-    return '#{:02x}{:02x}{:02x}'.format(r, g, b)
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b).upper()
 
 def hex_to_rgb(hex):
     """
