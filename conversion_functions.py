@@ -35,7 +35,7 @@ def cmyk_to_rgb(c, m, y, k):
     r = 255 * (1 - c) * (1 - k)
     g = 255 * (1 - m) * (1 - k)
     b = 255 * (1 - y) * (1 - k)
-    return int(r), int(g), int(b)
+    return round(r), round(g), round(b)
 
 def hsl_to_rgb(h, s, l):
     """
