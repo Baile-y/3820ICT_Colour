@@ -109,27 +109,24 @@ def hsv_to_rgb(h, s, v):
     if i == 5: r, g, b = v, p, q
     return int(r * 255), int(g * 255), int(b * 255)
 
+
 def rgb_to_cmyk(r, g, b):
-    """
-     Convert RGB triplet to CMYK. CIE 1931 color space is defined as a range of 0 - 1 where 0 is transparent and 255 is opaque
-     
-     @param r - Red component in 0 - 255
-     @param g - Green component in 0 - 255
-     @param b - Blue component in 0 - 255 ( alpha is ignored )
-     
-     @return CIE 1931 color space as a 3 -
-    """
-    # Return the radius of the circle.
-    if (r, g, b) == (0, 0, 0):
+    # Normalize RGB values to the range 0-1
+    r_prime = r / 255.0
+    g_prime = g / 255.0
+    b_prime = b / 255.0
+
+    # Calculate K (black key)
+    k = 1 - max(r_prime, g_prime, b_prime)
+
+    if k == 1:  # If black is 100%
         return 0, 0, 0, 1
-    c = 1 - r / 255
-    m = 1 - g / 255
-    y = 1 - b / 255
-    min_cmy = min(c, m, y)
-    c = (c - min_cmy) / (1 - min_cmy)
-    m = (m - min_cmy) / (1 - min_cmy)
-    y = (y - min_cmy) / (1 - min_cmy)
-    k = min_cmy
+
+    # Calculate CMY values
+    c = (1 - r_prime - k) / (1 - k)
+    m = (1 - g_prime - k) / (1 - k)
+    y = (1 - b_prime - k) / (1 - k)
+
     return round(c, 2), round(m, 2), round(y, 2), round(k, 2)
 
 def rgb_to_hsl(r, g, b):

@@ -27,7 +27,7 @@ def test_cmyk_to_rgb():
 def test_rgb_to_cmyk():
     assert rgb_to_cmyk(255, 0, 0) == (0, 1, 1, 0)      # Red
     assert rgb_to_cmyk(255, 255, 0) == (0, 0, 1, 0)    # Yellow
-    assert rgb_to_cmyk(183, 137, 102) == (0.2, 0.4, 0.6, 0.28)  # Brownish shade
+    assert rgb_to_cmyk(183, 137, 102) == (0.0, 0.25, 0.44, 0.28)  # Brownish shade
 
 # Testing hsl_to_rgb function
 def test_hsl_to_rgb():
