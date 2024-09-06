@@ -12,6 +12,7 @@ def validate_rgb(r, g, b):
     if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
         raise ValueError(f"Invalid RGB value: ({r}, {g}, {b}). Each value must be between 0 and 255.")
 
+
 def validate_hsl(h, s, l):
     """
     Validate HSL values to ensure hue is between 0 and 360, and saturation and lightness are between 0 and 100.
@@ -29,6 +30,7 @@ def validate_hsl(h, s, l):
         raise ValueError(f"Invalid saturation value: {s}. Must be in the range [0, 100].")
     if not (0 <= l <= 100):
         raise ValueError(f"Invalid lightness value: {l}. Must be in the range [0, 100].")
+
 
 def validate_hsv(h, s, v):
     """
@@ -48,6 +50,7 @@ def validate_hsv(h, s, v):
     if not (0 <= v <= 100):
         raise ValueError(f"Invalid value: {v}. Must be in the range [0, 100].")
 
+
 def validate_cmyk(c, m, y, k):
     """
     Validate CMYK values to ensure all values are between 0 and 1.
@@ -63,6 +66,7 @@ def validate_cmyk(c, m, y, k):
     if not (0 <= c <= 1 and 0 <= m <= 1 and 0 <= y <= 1 and 0 <= k <= 1):
         raise ValueError(f"Invalid CMYK value: ({c}, {m}, {y}, {k}). Each value must be between 0 and 1.")
 
+
 # RGB to HEX
 def rgb_to_hex(r, g, b):
     """
@@ -76,6 +80,7 @@ def rgb_to_hex(r, g, b):
     """
     validate_rgb(r, g, b)
     return '#{:02X}{:02X}{:02X}'.format(r, g, b)
+
 
 # HEX to RGB
 def hex_to_rgb(hex_value):
@@ -92,9 +97,10 @@ def hex_to_rgb(hex_value):
     if len(hex_value) != 6:
         raise ValueError(f"Invalid hex color: {hex_value}. Must be 6 characters long.")
     try:
-        return tuple(int(hex_value[i:i+2], 16) for i in (0, 2, 4))
+        return tuple(int(hex_value[i:i + 2], 16) for i in (0, 2, 4))
     except ValueError:
         raise ValueError(f"Invalid hex color: {hex_value}. Contains non-hexadecimal characters.")
+
 
 # CMYK to RGB
 def cmyk_to_rgb(c, m, y, k):
@@ -112,6 +118,7 @@ def cmyk_to_rgb(c, m, y, k):
     g = 255 * (1 - m) * (1 - k)
     b = 255 * (1 - y) * (1 - k)
     return int(round(r)), int(round(g)), int(round(b))
+
 
 # HSL to RGB
 def hsl_to_rgb(h, s, l):
@@ -131,10 +138,23 @@ def hsl_to_rgb(h, s, l):
     c = (1 - abs(2 * l - 1)) * s
     x = c * (1 - abs((h / 60) % 2 - 1))
     m = l - c / 2
-    rgb_base = [(c, x, 0), (x, c, 0), (0, c, x), (0, x, c), (x, 0, c), (c, 0, x)]
-    rgb = rgb_base[int(h // 60)]
+
+    if h < 60:
+        rgb = (c, x, 0)
+    elif h < 120:
+        rgb = (x, c, 0)
+    elif h < 180:
+        rgb = (0, c, x)
+    elif h < 240:
+        rgb = (0, x, c)
+    elif h < 300:
+        rgb = (x, 0, c)
+    else:
+        rgb = (c, 0, x)
+
     r, g, b = [(val + m) * 255 for val in rgb]
     return int(round(r)), int(round(g)), int(round(b))
+
 
 # HSV to RGB
 def hsv_to_rgb(h, s, v):
@@ -154,10 +174,23 @@ def hsv_to_rgb(h, s, v):
     c = v * s
     x = c * (1 - abs((h / 60) % 2 - 1))
     m = v - c
-    rgb_base = [(c, x, 0), (x, c, 0), (0, c, x), (0, x, c), (x, 0, c), (c, 0, x)]
-    rgb = rgb_base[int(h // 60)]
+
+    if h < 60:
+        rgb = (c, x, 0)
+    elif h < 120:
+        rgb = (x, c, 0)
+    elif h < 180:
+        rgb = (0, c, x)
+    elif h < 240:
+        rgb = (0, x, c)
+    elif h < 300:
+        rgb = (x, 0, c)
+    else:
+        rgb = (c, 0, x)
+
     r, g, b = [(val + m) * 255 for val in rgb]
     return int(round(r)), int(round(g)), int(round(b))
+
 
 # RGB to CMYK
 def rgb_to_cmyk(r, g, b):
@@ -180,6 +213,7 @@ def rgb_to_cmyk(r, g, b):
     y = (1 - b_prime - k) / (1 - k)
     return round(c, 2), round(m, 2), round(y, 2), round(k, 2)
 
+
 # RGB to HSL
 def rgb_to_hsl(r, g, b):
     """
@@ -192,22 +226,27 @@ def rgb_to_hsl(r, g, b):
     tuple: Corresponding HSL values (0-360, 0-100, 0-100).
     """
     validate_rgb(r, g, b)
-    r, g, b = r / 255.0, g / 255.0, b / 255.0
-    max_color, min_color = max(r, g, b), min(r, g, b)
-    l = (max_color + min_color) / 2
-    if max_color == min_color:
+    r_prime, g_prime, b_prime = r / 255.0, g / 255.0, b / 255.0
+    max_val, min_val = max(r_prime, g_prime, b_prime), min(r_prime, g_prime, b_prime)
+    l = (max_val + min_val) / 2
+
+    if max_val == min_val:
         h = s = 0
     else:
-        d = max_color - min_color
-        s = d / (2 - max_color - min_color) if l > 0.5 else d / (max_color + min_color)
-        if max_color == r:
-            h = (g - b) / d + (6 if g < b else 0)
-        elif max_color == g:
-            h = (b - r) / d + 2
-        elif max_color == b:
-            h = (r - g) / d + 4
+        delta = max_val - min_val
+        s = delta / (2 - max_val - min_val) if l > 0.5 else delta / (max_val + min_val)
+
+        if max_val == r_prime:
+            h = (g_prime - b_prime) / delta + (6 if g_prime < b_prime else 0)
+        elif max_val == g_prime:
+            h = (b_prime - r_prime) / delta + 2
+        else:
+            h = (r_prime - g_prime) / delta + 4
+
         h /= 6
+
     return round(h * 360), round(s * 100), round(l * 100)
+
 
 # RGB to HSV
 def rgb_to_hsv(r, g, b):
@@ -221,19 +260,19 @@ def rgb_to_hsv(r, g, b):
     tuple: Corresponding HSV values (0-360, 0-100, 0-100).
     """
     validate_rgb(r, g, b)
-    r, g, b = r / 255.0, g / 255.0, b / 255.0
-    max_color, min_color = max(r, g, b), min(r, g, b)
-    v = max_color
-    d = max_color - min_color
-    s = 0 if max_color == 0 else d / max_color
-    if max_color == min_color:
+    r_prime, g_prime, b_prime = r / 255.0, g / 255.0, b / 255.0
+    max_val, min_val = max(r_prime, g_prime, b_prime), min(r_prime, g_prime, b_prime)
+    v = max_val
+    delta = max_val - min_val
+    s = 0 if max_val == 0 else delta / max_val
+    if max_val == min_val:
         h = 0
     else:
-        if max_color == r:
-            h = (g - b) / d + (6 if g < b else 0)
-        elif max_color == g:
-            h = (b - r) / d + 2
-        elif max_color == b:
-            h = (r - g) / d + 4
+        if max_val == r_prime:
+            h = (g_prime - b_prime) / delta + (6 if g_prime < b_prime else 0)
+        elif max_val == g_prime:
+            h = (b_prime - r_prime) / delta + 2
+        else:
+            h = (r_prime - g_prime) / delta + 4
         h /= 6
     return round(h * 360), round(s * 100), round(v * 100)

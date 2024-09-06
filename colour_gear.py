@@ -81,6 +81,7 @@ class ColourGearPage(ttk.Frame):
                 if distance <= radius:
                     angle = math.atan2(dy, dx)
                     hue = (angle + math.pi) / (2 * math.pi) * 360
+                    hue = hue % 360  # Ensure hue is within [0, 360) range
                     saturation = distance / radius * 100
                     rgb = hsv_to_rgb(hue, saturation, 100)
                     draw.point((x, y), fill=rgb)
