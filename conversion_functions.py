@@ -50,91 +50,117 @@ def hex_to_rgb(hex_value):
 
 def cmyk_to_rgb(c, m, y, k):
     """
-     Convert CMYK color to RGB. This is a function to convert CMYK values to RGB values
+    Convert CMYK to RGB.
 
-     @param c - Cmyk value 0 - 255
-     @param m - Mmyk value 0 - 255 ( opacity )
-     @param y - Yanimacro value 0 - 255 ( opacity )
-     @param k - CMYK value 0 - 255 ( opacity )
+    Parameters:
+    c (float): Cyan value (0-1)
+    m (float): Magenta value (0-1)
+    y (float): Yellow value (0-1)
+    k (float): Black value (0-1)
 
-     @return RGB values as int ( r g b ) where r g
+    Returns:
+    (int, int, int): Corresponding RGB values (0-255 for each channel).
+
+    Raises:
+    ValueError: If any of the CMYK values are outside the range [0, 1] or are non-numeric.
     """
+    # Ensure the values are numeric
+    if not all(isinstance(i, (int, float)) for i in [c, m, y, k]):
+        raise ValueError(f"Invalid CMYK value: ({c}, {m}, {y}, {k}). All values must be numeric.")
+
+    # Validate that CMYK values are between 0 and 1
+    if not (0 <= c <= 1 and 0 <= m <= 1 and 0 <= y <= 1 and 0 <= k <= 1):
+        raise ValueError(f"Invalid CMYK value: ({c}, {m}, {y}, {k}). Each value must be between 0 and 1.")
+
     r = 255 * (1 - c) * (1 - k)
     g = 255 * (1 - m) * (1 - k)
     b = 255 * (1 - y) * (1 - k)
-    return round(r), round(g), round(b)
+
+    return int(round(r)), int(round(g)), int(round(b))
+
 
 def hsl_to_rgb(h, s, l):
     """
     Convert HSL to RGB color.
-    
+
     Parameters:
-    h (float): Hue value, range [0, 360).
-    s (float): Saturation value, range [0, 100].
-    l (float): Lightness value, range [0, 100].
-    
+    h (float): Hue value, range [0, 360)
+    s (float): Saturation value, range [0, 100]
+    l (float): Lightness value, range [0, 100]
+
     Returns:
     (int, int, int): Corresponding RGB values (0-255 for each channel).
+
+    Raises:
+    ValueError: If HSL values are out of range.
     """
-    s = s / 100.0
-    l = l / 100.0
+    # Validate HSL values
+    if not (0 <= h < 360):
+        raise ValueError(f"Invalid hue value: {h}. Hue must be in the range [0, 360).")
+    if not (0 <= s <= 100):
+        raise ValueError(f"Invalid saturation value: {s}. Saturation must be in the range [0, 100].")
+    if not (0 <= l <= 100):
+        raise ValueError(f"Invalid lightness value: {l}. Lightness must be in the range [0, 100].")
+
+    # Normalize s and l to [0, 1]
+    s /= 100
+    l /= 100
     c = (1 - abs(2 * l - 1)) * s
     x = c * (1 - abs((h / 60) % 2 - 1))
     m = l - c / 2
-    
-    if 0 <= h < 60:
-        r, g, b = c, x, 0
-    elif 60 <= h < 120:
-        r, g, b = x, c, 0
-    elif 120 <= h < 180:
-        r, g, b = 0, c, x
-    elif 180 <= h < 240:
-        r, g, b = 0, x, c
-    elif 240 <= h < 300:
-        r, g, b = x, 0, c
-    elif 300 <= h < 360:
-        r, g, b = c, 0, x
-    else:
-        r, g, b = 0, 0, 0
-    
-    r = (r + m) * 255
-    g = (g + m) * 255
-    b = (b + m) * 255
-    
+
+    # Lookup table for determining RGB base values based on hue
+    rgb_base = [(c, x, 0), (x, c, 0), (0, c, x), (0, x, c), (x, 0, c), (c, 0, x)]
+
+    # Find the correct base values based on the hue range
+    rgb = rgb_base[int(h // 60)]
+
+    # Calculate final RGB values and convert to 0-255 range
+    r, g, b = [(val + m) * 255 for val in rgb]
+
     return int(round(r)), int(round(g)), int(round(b))
+
 
 def hsv_to_rgb(h, s, v):
     """
-     Convert HSV to RGB. This is based on code from pyglet.
-     
-     @param h - Hue as a float between 0 and 360
-     @param s - Saturation as a float between 0 and 100
-     @param v - Value as a float between 0 and 100 ( inclusive )
-     
-     @return A tuple of ( r g b ) where r g
+    Convert HSV to RGB color.
+
+    Parameters:
+    h (float): Hue value, range [0, 360)
+    s (float): Saturation value, range [0, 100]
+    v (float): Value (brightness) value, range [0, 100]
+
+    Returns:
+    (int, int, int): Corresponding RGB values (0-255 for each channel).
+
+    Raises:
+    ValueError: If HSV values are out of range.
     """
-    h = h / 360.0
-    s = s / 100.0
-    v = v / 100.0
-    i = int(h * 6)
-    f = h * 6 - i
-    p = v * (1 - s)
-    q = v * (1 - f * s)
-    t = v * (1 - (1 - f) * s)
-    i = i % 6
-    # If i is 0 return the current value.
-    if i == 0: r, g, b = v, t, p
-    # if i 1 return r g b q q v p
-    if i == 1: r, g, b = q, v, p
-    # if i 2 r g b p v t
-    if i == 2: r, g, b = p, v, t
-    # if i 3 return r g b q v
-    if i == 3: r, g, b = p, q, v
-    # if i 4 r g b p v
-    if i == 4: r, g, b = t, p, v
-    # if i 5 r g b q
-    if i == 5: r, g, b = v, p, q
-    return int(r * 255), int(g * 255), int(b * 255)
+    # Validate HSV values
+    if not (0 <= h < 360):
+        raise ValueError(f"Invalid hue value: {h}. Hue must be in the range [0, 360).")
+    if not (0 <= s <= 100):
+        raise ValueError(f"Invalid saturation value: {s}. Saturation must be in the range [0, 100].")
+    if not (0 <= v <= 100):
+        raise ValueError(f"Invalid value (brightness) value: {v}. Value must be in the range [0, 100].")
+
+    # Normalize s and v to [0, 1]
+    s /= 100
+    v /= 100
+    c = v * s
+    x = c * (1 - abs((h / 60) % 2 - 1))
+    m = v - c
+
+    # Lookup table for determining RGB base values based on hue
+    rgb_base = [(c, x, 0), (x, c, 0), (0, c, x), (0, x, c), (x, 0, c), (c, 0, x)]
+
+    # Find the correct base values based on the hue range
+    rgb = rgb_base[int(h // 60)]
+
+    # Calculate final RGB values and convert to 0-255 range
+    r, g, b = [(val + m) * 255 for val in rgb]
+
+    return int(round(r)), int(round(g)), int(round(b))
 
 
 def rgb_to_cmyk(r, g, b):

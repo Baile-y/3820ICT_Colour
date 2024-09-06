@@ -100,3 +100,25 @@ def test_invalid_cmyk():
     # Test non-numeric CMYK values
     with pytest.raises(ValueError):
         cmyk_to_rgb("0", 0, 0, 0)  # Invalid C value (string)
+
+def test_invalid_hsl():
+    # Test HSL values exceeding the hue range (0-360)
+    with pytest.raises(ValueError):
+        hsl_to_rgb(370, 100, 50)  # Invalid hue
+    # Test saturation exceeding 100%
+    with pytest.raises(ValueError):
+        hsl_to_rgb(120, 150, 50)  # Invalid saturation
+    # Test lightness exceeding 100%
+    with pytest.raises(ValueError):
+        hsl_to_rgb(120, 100, 150)  # Invalid lightness
+
+def test_invalid_hsv():
+    # Test HSV values exceeding the hue range (0-360)
+    with pytest.raises(ValueError):
+        hsv_to_rgb(400, 100, 100)  # Invalid hue
+    # Test saturation exceeding 100%
+    with pytest.raises(ValueError):
+        hsv_to_rgb(120, 200, 100)  # Invalid saturation
+    # Test value exceeding 100%
+    with pytest.raises(ValueError):
+        hsv_to_rgb(120, 100, 200)  # Invalid value
