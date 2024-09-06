@@ -1,35 +1,62 @@
 def rgb_to_hex(r, g, b):
     """
-     Convert RGB to hex. This is used to create a color string that can be used in a Gnuplot plot
-     
-     @param r - Red component in 0 - 255
-     @param g - Green component in 0 - 255 ( inclusive )
-     @param b - Blue component in 0 - 255 ( inclusive )
-     
-     @return Hex representation of the color in the format #RRGGB
+    Convert RGB to hex.
+
+    Parameters:
+    r (int): Red value (0-255)
+    g (int): Green value (0-255)
+    b (int): Blue value (0-255)
+
+    Returns:
+    str: Hex representation of the color in the format #RRGGBB.
+
+    Raises:
+    ValueError: If any of the RGB values are outside the 0-255 range.
     """
+    # Validate that RGB values are within the 0-255 range
+    if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
+        raise ValueError(f"Invalid RGB value: ({r}, {g}, {b}). Each value must be between 0 and 255.")
+
     return '#{:02x}{:02x}{:02x}'.format(r, g, b).upper()
 
-def hex_to_rgb(hex):
+
+def hex_to_rgb(hex_value):
     """
-     Convert a hex color to RGB. This is useful for colorizing colors that are in the format #RRGGBB.
-     
-     @param hex - The hex color to convert. Must be in the format #RRGGBB.
-     
-     @return A tuple of RGB values ( 0 - 255 )
+    Convert a hex color to RGB. This is useful for colorizing colors that are in the format #RRGGBB.
+
+    Parameters:
+    hex_value (str): The hex color string, must start with '#' and be 7 characters long (#RRGGBB).
+
+    Returns:
+    (int, int, int): Corresponding RGB values (0-255 for each channel).
+
+    Raises:
+    ValueError: If the input is not a valid hex color string.
     """
-    hex = hex.lstrip('#')
-    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+    hex_value = hex_value.lstrip('#')
+
+    # Validate length (must be 6 characters for RRGGBB)
+    if len(hex_value) != 6:
+        raise ValueError(f"Invalid hex color: {hex_value}. Must be 6 characters long.")
+
+    # Validate that the hex string contains only valid hexadecimal characters
+    try:
+        int(hex_value, 16)
+    except ValueError:
+        raise ValueError(f"Invalid hex color: {hex_value}. Contains non-hexadecimal characters.")
+
+    return tuple(int(hex_value[i:i + 2], 16) for i in (0, 2, 4))
+
 
 def cmyk_to_rgb(c, m, y, k):
     """
      Convert CMYK color to RGB. This is a function to convert CMYK values to RGB values
-     
+
      @param c - Cmyk value 0 - 255
      @param m - Mmyk value 0 - 255 ( opacity )
      @param y - Yanimacro value 0 - 255 ( opacity )
      @param k - CMYK value 0 - 255 ( opacity )
-     
+
      @return RGB values as int ( r g b ) where r g
     """
     r = 255 * (1 - c) * (1 - k)
