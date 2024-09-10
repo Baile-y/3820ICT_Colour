@@ -93,8 +93,8 @@ class ColourGrabPage(ttk.Frame):
         else:
             self._activate_image_mode()
 
-        # Ensure UI updates after switching mode
-        self.update_idletasks()  # Ensure Tkinter processes all UI changes
+        # Trigger UI updates to ensure the visibility changes are applied
+        self.update_idletasks()
 
     def _activate_webcam_mode(self):
         """Activates webcam mode and prepares the UI."""
@@ -168,10 +168,16 @@ class ColourGrabPage(ttk.Frame):
     def imageSubmit(self):
         """Handles image submission and processes it."""
         file_path = self.file_path.get()
+
+        if not file_path:  # Check for empty path
+            self.error_label.config(text="File not found. Please check the path.")
+            return
+
         try:
             image = Image.open(file_path)
             image = self._resize_image(image)
-            colours = self.extract_colour_palette(np.array(image))
+            image_array = np.array(image)
+            colours = self.extract_colour_palette(image_array)
             self.error_label.config(text="")
             self.display_colour_palette(colours)
         except FileNotFoundError:

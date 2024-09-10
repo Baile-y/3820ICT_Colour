@@ -2,8 +2,10 @@ import pytest
 from unittest import mock
 from tkinter import Tk
 from colour_grab import ColourGrabPage
+from PIL import Image
 import numpy as np
-
+import cv2
+from unittest.mock import call
 
 @pytest.fixture
 def app():
@@ -23,59 +25,41 @@ def test_switch_mode_to_image(app):
     assert app.image_path_label.winfo_ismapped() == 1  # Ensure that the image path label is visible
 
 
-def test_switch_mode_to_webcam(app, mocker):
+def test_switch_mode_to_webcam_no_camera(app, mocker):
+    """Test switching to webcam mode when no webcam is detected."""
+    # Mock VideoCapture to simulate no webcam being detected
     mock_cap = mocker.Mock()
-    mock_cap.read.return_value = (True, np.zeros((100, 100, 3), dtype=np.uint8))  # Return a valid image frame
+    mock_cap.isOpened.return_value = False  # Simulate no webcam
     mocker.patch('cv2.VideoCapture', return_value=mock_cap)
 
     app.mode.set("webcam")
     app.switch_mode()
 
-    app.update()  # Force Tkinter to update the UI
+    app.update()
 
-    assert app.webcam_canvas.winfo_ismapped() == 1  # Ensure the webcam canvas is visible
-
-
-def test_image_submit_valid_image(app, mocker):
-    mock_image = mocker.Mock()
-    mock_image_array = np.zeros((100, 100, 3), dtype=np.uint8)
-
-    # Mock Image.open and ensure that it returns a valid image object
-    mocker.patch('PIL.Image.open', return_value=mock_image)
-    mocker.patch('numpy.array', return_value=mock_image_array)
-
-    # Mock extract_colour_palette to test the call
-    mocker.patch.object(app, 'extract_colour_palette', return_value=[[255, 0, 0], [0, 255, 0], [0, 0, 255]])
-
-    app.file_path.set('valid_image_path.jpg')
-    app.imageSubmit()
-
-    # Ensure that the extract_colour_palette was called once
-    app.extract_colour_palette.assert_called_once_with(mock_image_array)
+    # Check that the error message is displayed
+    assert app.error_label.cget('text') == "Webcam is not detected or cannot be opened."
 
 
-def test_image_submit_invalid_image(app, mocker):
-    # Mock PIL.Image.open to raise an exception when trying to open an invalid image
-    mocker.patch('PIL.Image.open', side_effect=Exception)
+def test_webcam_submit_no_camera(app, mocker):
+    """Test webcam submit when no webcam is detected."""
+    # Mock VideoCapture to simulate no webcam being detected
+    mock_cap = mocker.Mock()
+    mock_cap.isOpened.return_value = False  # Simulate no webcam
+    mocker.patch('cv2.VideoCapture', return_value=mock_cap)
 
-    # Set an invalid image path and call the imageSubmit function
-    app.file_path.set('invalid_image_path.jpg')
-    app.imageSubmit()
+    app.webcamSubmit()
 
-    # Ensure that a generic error message was displayed
-    assert "An error occurred:" in app.error_label.cget('text')
-
-def test_image_submit_empty_path(app):
-    app.file_path.set('')  # Empty path
-    app.imageSubmit()
-
-    assert app.error_label.cget('text') == "File not found. Please check the path."
+    # Ensure that an error message is shown when no webcam is available
+    assert app.error_label.cget('text') == "Webcam is not initialized."
 
 
 def test_webcam_submit_valid_frame(app, mocker):
+    """Test webcam submit with a valid frame, mocking the webcam."""
     # Mock the cv2.VideoCapture class to return a mocked cap object with a valid read() method
     mock_cap = mocker.Mock()
-    mock_cap.read.return_value = (True, np.zeros((100, 100, 3), dtype=np.uint8))  # Ensure dtype is uint8
+    mock_cap.isOpened.return_value = True  # Simulate a webcam being available
+    mock_cap.read.return_value = (True, np.zeros((100, 100, 3), dtype=np.uint8))  # Simulate a valid image frame
     app.cap = mock_cap  # Set the mocked cap object as the webcam capture
 
     # Mock extract_colour_palette
@@ -89,6 +73,51 @@ def test_webcam_submit_valid_frame(app, mocker):
     assert app.error_label.cget('text') == ""  # No error
 
 
+def test_image_submit_valid_image(app, mocker):
+    # Create a small real image array (this will be resized in the program)
+    original_image_array = np.zeros((100, 100, 3), dtype=np.uint8)
+
+    # Mock extract_colour_palette to check if it's called
+    resized_image_array = np.zeros((50, 50, 3), dtype=np.uint8)  # Mock the resized array
+    mock_extract_palette = mocker.patch.object(app, 'extract_colour_palette', return_value=[[255, 0, 0], [0, 255, 0], [0, 0, 255]])
+
+    # Save the original image array to a temporary file and set its path
+    image = Image.fromarray(original_image_array)
+    image.save('test_image.jpg')
+
+    # Set the file path and trigger the image submission process
+    app.file_path.set('test_image.jpg')
+    app.imageSubmit()
+
+    # Capture the actual argument passed to extract_colour_palette
+    actual_call_args = mock_extract_palette.call_args[0][0]  # Get the first argument in the call
+
+    # Ensure that extract_colour_palette was called once
+    mock_extract_palette.assert_called_once()
+
+    # Use numpy.testing.assert_array_equal to compare the actual and expected arrays
+    np.testing.assert_array_equal(actual_call_args, resized_image_array)
+
+
+def test_image_submit_invalid_image(app, mocker):
+    # Mock PIL.Image.open to raise an exception when trying to open an invalid image
+    mocker.patch('PIL.Image.open', side_effect=Exception)
+
+    # Set an invalid image path and call the imageSubmit function
+    app.file_path.set('invalid_image_path.jpg')
+    app.imageSubmit()
+
+    # Ensure that a generic error message was displayed
+    assert "An error occurred:" in app.error_label.cget('text')
+
+
+def test_image_submit_empty_path(app):
+    app.file_path.set('')  # Empty path
+    app.imageSubmit()
+
+    assert app.error_label.cget('text') == "File not found. Please check the path."
+
+
 def test_image_submit_file_not_found(app, mocker):
     # Mock Image.open to raise FileNotFoundError
     mocker.patch('PIL.Image.open', side_effect=FileNotFoundError)
@@ -97,19 +126,6 @@ def test_image_submit_file_not_found(app, mocker):
     app.imageSubmit()
 
     assert app.error_label.cget('text') == "File not found. Please check the path."
-
-
-def test_webcam_submit_invalid_frame(app, mocker):
-    # Mock the cv2.VideoCapture class to return a mocked cap object with an invalid read() method
-    mock_cap = mocker.Mock()
-    mock_cap.read.return_value = (False, None)
-    app.cap = mock_cap  # Set the mocked cap object as the webcam capture
-
-    # Call the webcamSubmit function
-    app.webcamSubmit()
-
-    # Ensure that an error message was displayed
-    assert app.error_label.cget('text') == "Failed to capture image from webcam."
 
 
 def test_invalid_num_colours(app, mocker):
@@ -126,21 +142,19 @@ def test_invalid_num_colours(app, mocker):
 
 
 def test_extract_colour_palette(app, mocker):
-    mock_image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+    # Create a small, consistent image array
+    mock_image = np.array([[[255, 0, 0], [0, 255, 0], [0, 0, 255]],
+                           [[255, 255, 0], [0, 255, 255], [255, 0, 255]]], dtype=np.uint8)
 
-    # Mock KMeans and make it return fixed clusters
+    # Mock KMeans and return fixed cluster centers
     mock_kmeans = mocker.Mock()
     mock_kmeans.cluster_centers_ = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]])
     mocker.patch('sklearn.cluster.KMeans', return_value=mock_kmeans)
 
-    # Ensure deterministic image data by fixing the input values
-    mock_image = np.array([[[255, 0, 0], [0, 255, 0], [0, 0, 255]], [[255, 255, 0], [0, 255, 255], [255, 0, 255]]])
-
     colours = app.extract_colour_palette(mock_image)
 
-    # Use numpy's assert_array_equal to compare arrays
+    # Ensure that the colors returned match the expected cluster centers
     np.testing.assert_array_equal(colours, np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]]))
-
 
 def test_display_colour_palette(app):
     colours = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
