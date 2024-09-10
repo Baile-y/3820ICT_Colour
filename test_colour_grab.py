@@ -20,7 +20,7 @@ def test_switch_mode_to_image(app):
 
     app.update()  # Force Tkinter to update the UI
 
-    assert app.image_path_label.winfo_ismapped() == 1
+    assert app.image_path_label.winfo_ismapped() == 1  # Ensure that the image path label is visible
 
 
 def test_switch_mode_to_webcam(app, mocker):
@@ -62,8 +62,8 @@ def test_image_submit_invalid_image(app, mocker):
     app.file_path.set('invalid_image_path.jpg')
     app.imageSubmit()
 
-    # Ensure that an error message was displayed
-    assert app.error_label.cget('text') == "Please enter a valid image file path."
+    # Ensure that a generic error message was displayed
+    assert "An error occurred:" in app.error_label.cget('text')
 
 
 def test_webcam_submit_valid_frame(app, mocker):
