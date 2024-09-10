@@ -93,10 +93,13 @@ class ColourGrabPage(ttk.Frame):
         else:
             self._activate_image_mode()
 
+        # Ensure UI updates after switching mode
+        self.update_idletasks()  # Ensure Tkinter processes all UI changes
+
     def _activate_webcam_mode(self):
         """Activates webcam mode and prepares the UI."""
-        self._hide_image_widgets()
-        self._show_webcam_widgets()
+        self._hide_image_widgets()  # Hide image mode-specific widgets
+        self._show_webcam_widgets()  # Show webcam mode-specific widgets
 
         if not self.cap:
             self.cap = cv2.VideoCapture(0)  # Start the webcam capture
@@ -110,8 +113,8 @@ class ColourGrabPage(ttk.Frame):
 
     def _activate_image_mode(self):
         """Activates image mode and prepares the UI."""
-        self._hide_webcam_widgets()
-        self._show_image_widgets()
+        self._hide_webcam_widgets()  # Hide webcam mode-specific widgets
+        self._show_image_widgets()  # Show image mode-specific widgets
 
         # Clear the error message when switching to image mode
         self.error_label.config(text="")
@@ -202,7 +205,7 @@ class ColourGrabPage(ttk.Frame):
         pixels = image.reshape(-1, 3)
         n_clusters = max(1, self.num_colours.get())  # Ensure at least 1 cluster
         try:
-            kmeans = KMeans(n_clusters=n_clusters)
+            kmeans = KMeans(n_clusters=n_clusters, random_state=42)  # Set random_state for deterministic results
             kmeans.fit(pixels)
             return kmeans.cluster_centers_.astype(int)
         except Exception as e:

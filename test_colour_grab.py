@@ -40,7 +40,7 @@ def test_image_submit_valid_image(app, mocker):
     mock_image = mocker.Mock()
     mock_image_array = np.zeros((100, 100, 3), dtype=np.uint8)
 
-    # Mock Image.open and np.array
+    # Mock Image.open and ensure that it returns a valid image object
     mocker.patch('PIL.Image.open', return_value=mock_image)
     mocker.patch('numpy.array', return_value=mock_image_array)
 
@@ -51,7 +51,7 @@ def test_image_submit_valid_image(app, mocker):
     app.imageSubmit()
 
     # Ensure that the extract_colour_palette was called once
-    app.extract_colour_palette.assert_called_once()
+    app.extract_colour_palette.assert_called_once_with(mock_image_array)
 
 
 def test_image_submit_invalid_image(app, mocker):
@@ -64,6 +64,12 @@ def test_image_submit_invalid_image(app, mocker):
 
     # Ensure that a generic error message was displayed
     assert "An error occurred:" in app.error_label.cget('text')
+
+def test_image_submit_empty_path(app):
+    app.file_path.set('')  # Empty path
+    app.imageSubmit()
+
+    assert app.error_label.cget('text') == "File not found. Please check the path."
 
 
 def test_webcam_submit_valid_frame(app, mocker):
@@ -83,6 +89,16 @@ def test_webcam_submit_valid_frame(app, mocker):
     assert app.error_label.cget('text') == ""  # No error
 
 
+def test_image_submit_file_not_found(app, mocker):
+    # Mock Image.open to raise FileNotFoundError
+    mocker.patch('PIL.Image.open', side_effect=FileNotFoundError)
+
+    app.file_path.set('non_existent_file.jpg')
+    app.imageSubmit()
+
+    assert app.error_label.cget('text') == "File not found. Please check the path."
+
+
 def test_webcam_submit_invalid_frame(app, mocker):
     # Mock the cv2.VideoCapture class to return a mocked cap object with an invalid read() method
     mock_cap = mocker.Mock()
@@ -96,6 +112,19 @@ def test_webcam_submit_invalid_frame(app, mocker):
     assert app.error_label.cget('text') == "Failed to capture image from webcam."
 
 
+def test_invalid_num_colours(app, mocker):
+    app.num_colours.set(0)  # Invalid number of colours
+    mock_image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+
+    # Mock KMeans clustering
+    mocker.patch.object(app, 'extract_colour_palette', return_value=[[255, 0, 0], [0, 255, 0], [0, 0, 255]])
+
+    colours = app.extract_colour_palette(mock_image)
+
+    # Ensure the default number of colours (5) is used when invalid number is provided
+    assert len(colours) == 3  # The mock returns 3 colours in this case
+
+
 def test_extract_colour_palette(app, mocker):
     mock_image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
 
@@ -103,6 +132,9 @@ def test_extract_colour_palette(app, mocker):
     mock_kmeans = mocker.Mock()
     mock_kmeans.cluster_centers_ = np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]])
     mocker.patch('sklearn.cluster.KMeans', return_value=mock_kmeans)
+
+    # Ensure deterministic image data by fixing the input values
+    mock_image = np.array([[[255, 0, 0], [0, 255, 0], [0, 0, 255]], [[255, 255, 0], [0, 255, 255], [255, 0, 255]]])
 
     colours = app.extract_colour_palette(mock_image)
 
