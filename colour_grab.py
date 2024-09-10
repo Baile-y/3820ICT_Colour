@@ -103,10 +103,10 @@ class ColourGrabPage(ttk.Frame):
         if not self.cap:
             self.cap = cv2.VideoCapture(0)  # Start the webcam capture
             if not self.cap.isOpened():
-                self.error_label.config(text="Webcam is not detected or cannot be opened.")
+                self.error_label.config(text="Webcam is not detected or cannot be opened.", foreground="red")
                 self.cap = None
             else:
-                self.error_label.config(text="")
+                self.error_label.config(text="", foreground="black")  # Reset to default color if no error
                 if not self.updating_frame:
                     self.update_frame()  # Start updating the webcam feed
 
