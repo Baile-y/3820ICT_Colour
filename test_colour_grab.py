@@ -8,6 +8,7 @@ import tempfile
 import cv2
 from unittest.mock import call
 
+
 @pytest.fixture
 def app(mocker):
     # Mock the Tk() object to avoid GUI issues
@@ -159,6 +160,7 @@ def test_extract_colour_palette(app, mocker):
 
     # Ensure that the colors returned match the expected cluster centers
     np.testing.assert_array_equal(colours, np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]]))
+
 
 def test_display_colour_palette(app):
     colours = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]

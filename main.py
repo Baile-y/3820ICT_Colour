@@ -8,6 +8,7 @@ from colour_converter import ColourConverterPage
 from colour_gear import ColourGearPage
 from colour_grab import ColourGrabPage
 
+
 class MainApplication(tk.Tk):
     def __init__(self, *args, **kwargs):
         """
