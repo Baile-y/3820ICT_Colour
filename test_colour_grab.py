@@ -19,7 +19,6 @@ def test_switch_mode_to_image(app):
     app.switch_mode()
 
     app.update()  # Force Tkinter to update the UI
-    app.image_path_label.lift()  # Bring the label to the front
 
     assert app.image_path_label.winfo_ismapped() == 1
 
@@ -33,9 +32,8 @@ def test_switch_mode_to_webcam(app, mocker):
     app.switch_mode()
 
     app.update()  # Force Tkinter to update the UI
-    app.webcam_canvas.lift()  # Bring the webcam canvas to the front
 
-    assert app.webcam_canvas.winfo_ismapped() == 1  # Ensure the canvas is visible
+    assert app.webcam_canvas.winfo_ismapped() == 1  # Ensure the webcam canvas is visible
 
 
 def test_image_submit_valid_image(app, mocker):
@@ -52,8 +50,8 @@ def test_image_submit_valid_image(app, mocker):
     app.file_path.set('valid_image_path.jpg')
     app.imageSubmit()
 
-    # Ensure that the extract_colour_palette was called
-    assert app.extract_colour_palette.called_once()
+    # Ensure that the extract_colour_palette was called once
+    app.extract_colour_palette.assert_called_once()
 
 
 def test_image_submit_invalid_image(app, mocker):
@@ -108,8 +106,8 @@ def test_extract_colour_palette(app, mocker):
 
     colours = app.extract_colour_palette(mock_image)
 
-    # Check that the extracted colours match the expected values
-    assert (colours == np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]])).all()
+    # Use numpy's assert_array_equal to compare arrays
+    np.testing.assert_array_equal(colours, np.array([[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]]))
 
 
 def test_display_colour_palette(app):
