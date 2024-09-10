@@ -4,12 +4,15 @@ from tkinter import Tk
 from colour_grab import ColourGrabPage
 from PIL import Image
 import numpy as np
+import tempfile
 import cv2
 from unittest.mock import call
 
 @pytest.fixture
-def app():
-    root = Tk()
+def app(mocker):
+    # Mock the Tk() object to avoid GUI issues
+    mocker.patch('tkinter.Tk', autospec=True)
+    root = Tk()  # This is now a mock
     controller = mock.Mock()
     page = ColourGrabPage(root, controller)
     yield page
@@ -81,13 +84,14 @@ def test_image_submit_valid_image(app, mocker):
     resized_image_array = np.zeros((50, 50, 3), dtype=np.uint8)  # Mock the resized array
     mock_extract_palette = mocker.patch.object(app, 'extract_colour_palette', return_value=[[255, 0, 0], [0, 255, 0], [0, 0, 255]])
 
-    # Save the original image array to a temporary file and set its path
-    image = Image.fromarray(original_image_array)
-    image.save('test_image.jpg')
+    # Use a temporary file instead of saving to disk
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_image:
+        image = Image.fromarray(original_image_array)
+        image.save(temp_image.name)
 
-    # Set the file path and trigger the image submission process
-    app.file_path.set('test_image.jpg')
-    app.imageSubmit()
+        # Set the file path and trigger the image submission process
+        app.file_path.set(temp_image.name)
+        app.imageSubmit()
 
     # Capture the actual argument passed to extract_colour_palette
     actual_call_args = mock_extract_palette.call_args[0][0]  # Get the first argument in the call
