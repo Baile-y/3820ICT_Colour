@@ -23,8 +23,7 @@ class ColourGrabPage(ttk.Frame):
         self.cap = None  # Webcam capture not started yet
         self.updating_frame = False  # Prevent multiple update_frame calls
 
-        # Initialize the mode based on the default value
-        self.switch_mode()
+        self._activate_image_mode()  # Set default mode to Image (manually activating)
 
     def create_widgets(self):
         """Creates and places all widgets in the frame."""
@@ -85,7 +84,8 @@ class ColourGrabPage(ttk.Frame):
             self._activate_webcam_mode()
         else:
             self._activate_image_mode()
-        self.update_idletasks()
+
+        self.update_idletasks()  # Force the UI to update to reflect widget visibility changes
 
     def _activate_webcam_mode(self):
         """Activates webcam mode and sets up the UI."""
