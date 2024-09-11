@@ -78,8 +78,11 @@ class ColourGrabPage(ttk.Frame):
         self.webcam_submit_button = ttk.Button(self, text="Go", command=self.webcamSubmit)
         self.webcam_submit_button.grid(column=0, row=13, columnspan=2, pady=(0, 10), sticky=tk.EW)
 
-        self.updating_frame = False  # Flag to prevent multiple update_frame calls
+        # Configure columns for equal spacing
+        for i in range(2):  # Adjust range based on the number of columns you want to control
+            self.grid_columnconfigure(i, weight=1)
 
+        # Initialize the mode
         self.switch_mode()  # Initialize the UI to match the default mode
 
     def switch_mode(self, event=None):
@@ -176,6 +179,13 @@ class ColourGrabPage(ttk.Frame):
             image = Image.open(file_path)
             image = self._resize_image(image)
             image_array = np.array(image)
+
+            # Ensure the image has 3 channels (RGB)
+            if image_array.shape[-1] != 3:
+                # Convert image to RGB if it has more or fewer channels
+                image = image.convert("RGB")
+                image_array = np.array(image)
+
             colours = self.extract_colour_palette(image_array)
             self.error_label.config(text="")
             self.display_colour_palette(colours)
@@ -218,14 +228,45 @@ class ColourGrabPage(ttk.Frame):
             return []
 
     def display_colour_palette(self, colours):
-        """Displays the extracted colour palette on the canvas."""
+        """Displays the extracted colour palette on the canvas with hex values inside the blocks, and makes them copiable."""
         block_width = self.canvas_width // len(colours)
+
+        # Clear any existing elements on the canvas
+        self.palette_canvas.delete("all")
+
         for i, colour in enumerate(colours):
+            # Ensure the colour values are between 0 and 255
             colour = np.clip(colour, 0, 255)
+
+            # Convert the colour to Hex format
             hex_colour = f'#{int(colour[0]):02x}{int(colour[1]):02x}{int(colour[2]):02x}'
+
+            # Create the rectangle representing the colour
             self.palette_canvas.create_rectangle(
                 i * block_width, 0, (i + 1) * block_width, 50, fill=hex_colour, outline=""
             )
+
+            # Add the hex text inside the colour block with reduced font size
+            self.palette_canvas.create_text(
+                (i * block_width) + block_width // 2, 25,  # Position it in the middle of the block
+                text=hex_colour, fill='white' if np.mean(colour) < 128 else 'black',  # Use contrasting text colour
+                font=('Arial', 10, 'bold')  # Reduced font size
+            )
+
+            # Make the hex code copiable on click
+            def copy_to_clipboard(hex_code=hex_colour):
+                self.clipboard_clear()  # Clear the clipboard
+                self.clipboard_append(hex_code)  # Append the hex code to the clipboard
+                self.error_label.config(text=f"Copied {hex_code} to clipboard!", foreground="green")
+
+            # Bind the click event on the color block to copy the hex code to clipboard
+            self.palette_canvas.tag_bind(self.palette_canvas.create_rectangle(
+                i * block_width, 0, (i + 1) * block_width, 50, fill=hex_colour, outline=""),
+                '<Button-1>', lambda event, hex_code=hex_colour: copy_to_clipboard(hex_code)
+            )
+
+        # Ensure layout is refreshed
+        self.update_idletasks()
 
     def __del__(self):
         """Releases the webcam when the object is destroyed."""
