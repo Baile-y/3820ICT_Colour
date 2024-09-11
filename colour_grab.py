@@ -13,25 +13,28 @@ class ColourGrabPage(ttk.Frame):
         self.controller = controller
         self.file_path = tk.StringVar()
 
-        self.error_label = ttk.Label(self, text=" ")
-        self.error_label.grid(column=0, row=20, sticky=tk.W)
-
-        self.num_colours = tk.IntVar(value=5)
         self.canvas_width = 500
         self.canvas_height = 350
 
+        # Create widgets and configure grid
+        self.create_widgets()
+        self.configure_grid()
+
+        self.cap = None  # Webcam capture not started yet
+        self.updating_frame = False  # Prevent multiple update_frame calls
+
+        # Initialize the mode based on the default value
+        self.switch_mode()
+
+    def create_widgets(self):
+        """Creates and places all widgets in the frame."""
         # Mode selector
-        self.mode = tk.StringVar(value="Image")  # Default mode is image
         mode_label = ttk.Label(self, text="Mode:")
         mode_label.grid(column=0, row=0, sticky=tk.W)
 
-        mode_selector = ttkb.Combobox(
-            self,
-            textvariable=self.mode,
-            values=["Webcam", "Image"],
-            bootstyle="info",
-            width=50
-        )
+        self.mode = tk.StringVar(value="Image")  # Default mode is 'Image'
+        mode_selector = ttkb.Combobox(self, textvariable=self.mode, values=["Webcam", "Image"],
+                                      bootstyle="info", width=50)
         mode_selector.grid(column=0, row=1, columnspan=2, sticky=(tk.W, tk.E))
         mode_selector.bind("<<ComboboxSelected>>", self.switch_mode)
 
@@ -45,84 +48,66 @@ class ColourGrabPage(ttk.Frame):
         self.image_submit_button = ttk.Button(self, text="Go", command=self.imageSubmit)
         self.image_submit_button.grid(column=0, row=14, sticky=(tk.W, tk.E))
 
-        # Canvas for webcam feed
+        # Webcam and Colour Palette Canvas
         self.webcam_canvas = Canvas(self, width=self.canvas_width, height=self.canvas_height)
         self.webcam_canvas.grid(column=0, row=10, columnspan=2, pady=10)
 
-        # Canvas for color palette
         self.palette_canvas = Canvas(self, width=self.canvas_width, height=50)
         self.palette_canvas.grid(column=0, row=15, columnspan=2, pady=10)
 
-        # Initialize webcam capture (but don't start it yet)
-        self.cap = None
+        # Error label for feedback
+        self.error_label = ttk.Label(self, text=" ")
+        self.error_label.grid(column=0, row=20, sticky=tk.W)
 
-        num_colour_label = tk.Label(
-            self,
-            text="Select Number of Colours: ",
-            font=('Arial', 12, 'bold'),
-            fg="white",
-            bg="gray"
-        )
+        # Number of colors selector
+        num_colour_label = tk.Label(self, text="Select Number of Colours:", font=('Arial', 12, 'bold'),
+                                    fg="white", bg="gray")
         num_colour_label.grid(column=0, row=11, columnspan=2, sticky=(tk.W, tk.E))
 
-        num_colour_selector = ttkb.Combobox(
-            self,
-            textvariable=self.num_colours,
-            values=list(range(1, 11)),
-            bootstyle="info",
-            width=50
-        )
+        self.num_colours = tk.IntVar(value=5)  # Default number of colours
+        num_colour_selector = ttkb.Combobox(self, textvariable=self.num_colours, values=list(range(1, 11)),
+                                            bootstyle="info", width=50)
         num_colour_selector.grid(column=0, row=12, columnspan=2, sticky=(tk.W, tk.E))
         num_colour_selector.set("5")
 
         self.webcam_submit_button = ttk.Button(self, text="Go", command=self.webcamSubmit)
         self.webcam_submit_button.grid(column=0, row=13, columnspan=2, pady=(0, 10), sticky=tk.EW)
 
-        # Configure columns for equal spacing
-        for i in range(2):  # Adjust range based on the number of columns you want to control
+    def configure_grid(self):
+        """Configures grid columns for uniform layout."""
+        for i in range(2):  # Adjust the range if you have more columns
             self.grid_columnconfigure(i, weight=1)
-
-        # Initialize the mode
-        self.switch_mode()  # Initialize the UI to match the default mode
 
     def switch_mode(self, event=None):
         """Switches between webcam and image modes, adjusting the UI accordingly."""
-        # Clear the error message when switching modes
         self.error_label.config(text="")
-
         if self.mode.get().lower() == "webcam":
             self._activate_webcam_mode()
         else:
             self._activate_image_mode()
-
-        # Trigger UI updates to ensure the visibility changes are applied
         self.update_idletasks()
 
     def _activate_webcam_mode(self):
-        """Activates webcam mode and prepares the UI."""
-        self._hide_image_widgets()  # Hide image mode-specific widgets
-        self._show_webcam_widgets()  # Show webcam mode-specific widgets
-
+        """Activates webcam mode and sets up the UI."""
+        self._hide_image_widgets()
+        self._show_webcam_widgets()
         if not self.cap:
-            self.cap = cv2.VideoCapture(0)  # Start the webcam capture
+            self.cap = cv2.VideoCapture(0)
             if not self.cap.isOpened():
                 self.error_label.config(text="Webcam is not detected or cannot be opened.", foreground="red")
                 self.cap = None
             else:
-                self.error_label.config(text="", foreground="black")  # Reset to default color if no error
+                self.error_label.config(text="", foreground="black")
                 if not self.updating_frame:
-                    self.update_frame()  # Start updating the webcam feed
+                    self.update_frame()
 
     def _activate_image_mode(self):
-        """Activates image mode and prepares the UI."""
-        self._hide_webcam_widgets()  # Hide webcam mode-specific widgets
-        self._show_image_widgets()  # Show image mode-specific widgets
-
-        # Clear the error message when switching to image mode
+        """Activates image mode and sets up the UI."""
+        self._hide_webcam_widgets()
+        self._show_image_widgets()
         self.error_label.config(text="")
-
         if self.cap and self.cap.isOpened():
-            self.cap.release()  # Stop the webcam feed
+            self.cap.release()  # Stop webcam capture if active
         self.updating_frame = False
 
     def _hide_image_widgets(self):
@@ -151,17 +136,14 @@ class ColourGrabPage(ttk.Frame):
         """Updates the webcam frame on the canvas."""
         if not self.cap:
             return
-
         ret, frame = self.cap.read()
         if ret and self.mode.get().lower() == "webcam":
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_resized = cv2.resize(frame_rgb, (self.canvas_width, self.canvas_height))
             img = Image.fromarray(frame_resized)
             img_tk = ImageTk.PhotoImage(image=img)
-
             self.webcam_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk)
             self.webcam_canvas.img_tk = img_tk  # Keep a reference to avoid garbage collection
-
         if self.mode.get().lower() == "webcam" and self.cap:
             self.after(30, self.update_frame)
         else:
@@ -170,22 +152,16 @@ class ColourGrabPage(ttk.Frame):
     def imageSubmit(self):
         """Handles image submission and processes it."""
         file_path = self.file_path.get()
-
-        if not file_path:  # Check for empty path
+        if not file_path:
             self.error_label.config(text="File not found. Please check the path.")
             return
-
         try:
             image = Image.open(file_path)
             image = self._resize_image(image)
             image_array = np.array(image)
-
-            # Ensure the image has 3 channels (RGB)
             if image_array.shape[-1] != 3:
-                # Convert image to RGB if it has more or fewer channels
                 image = image.convert("RGB")
                 image_array = np.array(image)
-
             colours = self.extract_colour_palette(image_array)
             self.error_label.config(text="")
             self.display_colour_palette(colours)
@@ -203,7 +179,6 @@ class ColourGrabPage(ttk.Frame):
         if not self.cap:
             self.error_label.config(text="Webcam is not initialized.")
             return
-
         ret, frame = self.cap.read()
         if ret:
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -228,45 +203,28 @@ class ColourGrabPage(ttk.Frame):
             return []
 
     def display_colour_palette(self, colours):
-        """Displays the extracted colour palette on the canvas with hex values inside the blocks, and makes them copiable."""
+        """Displays the extracted colour palette on the canvas with hex values inside the blocks."""
         block_width = self.canvas_width // len(colours)
-
-        # Clear any existing elements on the canvas
         self.palette_canvas.delete("all")
-
         for i, colour in enumerate(colours):
-            # Ensure the colour values are between 0 and 255
             colour = np.clip(colour, 0, 255)
-
-            # Convert the colour to Hex format
             hex_colour = f'#{int(colour[0]):02x}{int(colour[1]):02x}{int(colour[2]):02x}'
-
-            # Create the rectangle representing the colour
-            self.palette_canvas.create_rectangle(
+            rect = self.palette_canvas.create_rectangle(
                 i * block_width, 0, (i + 1) * block_width, 50, fill=hex_colour, outline=""
             )
-
-            # Add the hex text inside the colour block with reduced font size
             self.palette_canvas.create_text(
-                (i * block_width) + block_width // 2, 25,  # Position it in the middle of the block
-                text=hex_colour, fill='white' if np.mean(colour) < 128 else 'black',  # Use contrasting text colour
-                font=('Arial', 10, 'bold')  # Reduced font size
+                (i * block_width) + block_width // 2, 25,
+                text=hex_colour, fill='white' if np.mean(colour) < 128 else 'black',
+                font=('Arial', 10, 'bold')
             )
+            self.palette_canvas.tag_bind(rect, '<Button-1>',
+                                         lambda event, hex_code=hex_colour: self.copy_to_clipboard(hex_code))
 
-            # Make the hex code copiable on click
-            def copy_to_clipboard(hex_code=hex_colour):
-                self.clipboard_clear()  # Clear the clipboard
-                self.clipboard_append(hex_code)  # Append the hex code to the clipboard
-                self.error_label.config(text=f"Copied {hex_code} to clipboard!", foreground="green")
-
-            # Bind the click event on the color block to copy the hex code to clipboard
-            self.palette_canvas.tag_bind(self.palette_canvas.create_rectangle(
-                i * block_width, 0, (i + 1) * block_width, 50, fill=hex_colour, outline=""),
-                '<Button-1>', lambda event, hex_code=hex_colour: copy_to_clipboard(hex_code)
-            )
-
-        # Ensure layout is refreshed
-        self.update_idletasks()
+    def copy_to_clipboard(self, hex_code):
+        """Copies the hex code to the clipboard and displays feedback."""
+        self.clipboard_clear()
+        self.clipboard_append(hex_code)
+        self.error_label.config(text=f"Copied {hex_code} to clipboard!", foreground="green")
 
     def __del__(self):
         """Releases the webcam when the object is destroyed."""
