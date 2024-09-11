@@ -108,6 +108,22 @@ def test_image_submit_invalid(setup_colour_grab_page, mocker):
     assert page.error_label.cget("text") == "File not found. Please check the path."
 
 
+def test_image_submit_empty_path(setup_colour_grab_page):
+    """Test submitting an empty file path."""
+    page = setup_colour_grab_page
+    page.file_path.set("")
+    page.imageSubmit()
+    assert page.error_label.cget("text") == "File not found. Please check the path."
+
+
+def test_image_resizing(setup_colour_grab_page):
+    """Test the image resizing functionality."""
+    page = setup_colour_grab_page
+    mock_image = Image.new('RGB', (1000, 1000))  # Create a large mock image
+    resized_image = page._resize_image(mock_image)
+    assert resized_image.size == (500, 500)  # Check that the image is resized correctly
+
+
 def test_webcam_submit_with_webcam(setup_colour_grab_page, mocker):
     """Test submitting a valid frame from the webcam."""
     page = setup_colour_grab_page
@@ -151,6 +167,21 @@ def test_webcam_submit_no_webcam(setup_colour_grab_page, mocker):
     assert page.error_label.cget("text") == "Webcam is not initialized."
 
 
+def test_webcam_submit_failed_frame(setup_colour_grab_page, mocker):
+    """Test webcam submission failure when frame reading fails."""
+    page = setup_colour_grab_page
+    mock_capture = mocker.patch("cv2.VideoCapture")
+    mock_cap_instance = mock_capture.return_value
+    mock_cap_instance.isOpened.return_value = True
+    mock_cap_instance.read.return_value = (False, None)  # Simulate failure to read a frame
+
+    page.mode.set("Webcam")
+    page.switch_mode()
+    page.webcamSubmit()
+
+    assert page.error_label.cget("text") == "Failed to capture image from webcam."
+
+
 def test_colour_extraction(setup_colour_grab_page, mocker):
     """Test the colour extraction logic."""
     page = setup_colour_grab_page
@@ -174,6 +205,18 @@ def test_colour_extraction(setup_colour_grab_page, mocker):
 
     # Assert the correct number of colours were returned (should match page.num_colours.get())
     assert len(colours) == page.num_colours.get()
+
+
+def test_colour_extraction_failure(setup_colour_grab_page, mocker):
+    """Test KMeans failure during colour extraction."""
+    page = setup_colour_grab_page
+    mock_image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
+    mock_kmeans = mocker.patch("sklearn.cluster.KMeans.fit", side_effect=Exception("Clustering error"))
+
+    colours = page.extract_colour_palette(mock_image)
+
+    assert page.error_label.cget("text") == "Error during colour extraction: Clustering error"
+    assert colours == []  # Ensure no colours are returned in case of error
 
 
 def test_display_palette(setup_colour_grab_page, mocker):
