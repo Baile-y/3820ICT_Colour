@@ -5,11 +5,26 @@ import tkinter as tk
 from PIL import Image
 
 @pytest.fixture
-def colour_gear_page():
-    """Fixture for setting up the ColourGearPage object."""
-    root = tk.Tk()  # Create a root window
-    controller = MagicMock()  # Mock controller
-    return ColourGearPage(root, controller)
+def tkinter_root():
+    """Fixture to create a new Tkinter Toplevel window for each test."""
+    root = tk.Toplevel()  # Use Toplevel to avoid interference with global state
+    root.withdraw()  # Hide the window so it doesn't pop up during tests
+    yield root
+    root.destroy()  # Ensure the Tkinter window is destroyed after each test
+
+@pytest.fixture
+def colour_gear_page(tkinter_root):
+    """Fixture to set up the ColourGearPage instance using the Toplevel window."""
+    # Mock the controller since it is not relevant for the tests
+    controller = MagicMock()
+
+    # Instantiate the ColourGearPage with the Toplevel window
+    page = ColourGearPage(tkinter_root, controller)
+
+    yield page
+
+    # Explicitly destroy the Toplevel window after the test
+    tkinter_root.destroy()
 
 def test_create_colour_wheel(colour_gear_page):
     """Test that the colour wheel is created with the correct dimensions."""
@@ -61,12 +76,45 @@ def test_split_complementary_harmony(colour_gear_page):
         assert isinstance(colour, tuple)
         assert len(colour) == 3  # Should be RGB values
 
+def test_highlight_selected_harmony_button(colour_gear_page):
+    """Test that the selected harmony button is highlighted correctly."""
+    colour_gear_page.update_harmony("Analogous")
+    assert colour_gear_page.harmony_buttons["Analogous"].cget("relief") == "sunken"
+    assert colour_gear_page.harmony_buttons["Analogous"].cget("bg") == "lightblue"
+    assert colour_gear_page.harmony_buttons["Complementary"].cget("relief") == "raised"
+
+def test_display_harmony(colour_gear_page):
+    """Test that the correct harmony function is called based on the current harmony."""
+    x, y = 150, 150
+
+    with patch.object(colour_gear_page, 'show_complementary') as mock_complementary:
+        colour_gear_page.display_harmony("Complementary", x, y)
+        mock_complementary.assert_called_once_with(x, y)
+
+    with patch.object(colour_gear_page, 'show_analogous') as mock_analogous:
+        colour_gear_page.display_harmony("Analogous", x, y)
+        mock_analogous.assert_called_once_with(x, y)
+
 def test_get_text_colour(colour_gear_page):
     """Test the logic for determining if text colour should be black or white based on background."""
     dark_rgb = (10, 10, 10)  # Very dark colour
     light_rgb = (240, 240, 240)  # Very light colour
     assert colour_gear_page.get_text_colour(dark_rgb) == "white"
     assert colour_gear_page.get_text_colour(light_rgb) == "black"
+
+@patch.object(ColourGearPage, 'handle_selection')
+def test_on_click(mock_handle_selection, colour_gear_page):
+    """Test that on_click calls handle_selection."""
+    mock_event = MagicMock()
+    colour_gear_page.on_click(mock_event)
+    mock_handle_selection.assert_called_once_with(mock_event)
+
+@patch.object(ColourGearPage, 'handle_selection')
+def test_on_motion(mock_handle_selection, colour_gear_page):
+    """Test that on_motion calls handle_selection."""
+    mock_event = MagicMock()
+    colour_gear_page.on_motion(mock_event)
+    mock_handle_selection.assert_called_once_with(mock_event)
 
 # Tests related to canvas and tkinter operations are generally done using mocks
 @patch.object(tk.Canvas, 'create_oval')
@@ -85,3 +133,10 @@ def test_clear_circles(mock_delete, colour_gear_page):
     mock_delete.assert_any_call("complementary_circle")
     mock_delete.assert_any_call("analogous_circle_0")
     mock_delete.assert_any_call("analogous_circle_1")
+
+def test_handle_selection_out_of_bounds(colour_gear_page):
+    """Test that handle_selection doesn't fail when clicking outside the colour wheel."""
+    mock_event = MagicMock(x=400, y=400)  # Coordinates outside the wheel
+    colour_gear_page.handle_selection(mock_event)
+    # Ensure no changes are made to selected colour
+    assert colour_gear_page.selected_colour_label.cget("text") == "Selected colour"
