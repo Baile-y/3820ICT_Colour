@@ -74,7 +74,7 @@ class ColourGrabPage(ttk.Frame):
 
     def configure_grid(self):
         """Configures grid columns for uniform layout."""
-        for i in range(2):  # Adjust the range if you have more columns
+        for i in range(2):
             self.grid_columnconfigure(i, weight=1)
 
     def switch_mode(self, event=None):

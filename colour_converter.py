@@ -1,7 +1,7 @@
 from conversion_functions import *
 import tkinter as tk
 from tkinter import ttk
-import ttkbootstrap as ttkb  # Import ttkbootstrap for modern themes
+import ttkbootstrap as ttkb
 
 class ColourConverterPage(ttkb.Frame):  # Inherit from ttkbootstrap's Frame
     def __init__(self, parent, controller):

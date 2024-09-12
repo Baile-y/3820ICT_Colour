@@ -8,57 +8,71 @@ from colour_converter import ColourConverterPage
 from colour_gear import ColourGearPage
 from colour_grab import ColourGrabPage
 
-
 class MainApplication(tk.Tk):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: str, **kwargs: dict) -> None:
         """
-         Initialize the Colour Converter. This is where you create the frames and attach them
+        Initialize the Colour Converter main window and its pages.
         """
         super().__init__(*args, **kwargs)
         self.title("Color Converter")
-        
-        # Set the window size
         self.geometry("800x700")
-        # Navigation Bar Frame
-        nav_bar = ttk.Frame(self)
-        nav_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=5, pady=5)
 
-        # Content Frame
-        self.content_frame = ttk.Frame(self)
-        self.content_frame.grid(row=1, column=0)#, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Frames dictionary to hold the pages
+        self.frames: dict[str, ttk.Frame] = {}
 
-        self.frames = {}
-        # Set the frame to the frame.
-        for F in (ColourConverterPage, ColourGearPage, ColourGrabPage):
-            page_name = F.__name__
-            frame = F(parent=self.content_frame, controller=self)
+        # Create and configure the notebook for tab-like navigation
+        self.create_notebook()
+
+    def create_notebook(self) -> None:
+        """
+        Create a notebook (tab-like navigation) to hold different pages.
+        """
+        # Create the notebook for holding all the pages
+        self.notebook = ttk.Notebook(self)
+        self.notebook.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+
+        # Configure the grid for responsiveness
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        # Create the pages lazily, add them to the notebook
+        self.create_lazy_page("Colour Converter", ColourConverterPage)
+        self.create_lazy_page("Colour Gear", ColourGearPage)
+        self.create_lazy_page("Colour Grab", ColourGrabPage)
+
+    def create_lazy_page(self, page_name: str, page_class: type) -> None:
+        """
+        Create and add a page to the notebook lazily when it is first accessed.
+
+        @param page_name: Name of the page (used as a key in the frames dictionary).
+        @param page_class: Class of the page that should be created.
+        """
+        # Check if the page is already created
+        if page_name not in self.frames:
+            # Instantiate the page and store it in the frames dictionary
+            frame = page_class(parent=self.notebook, controller=self)
             self.frames[page_name] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+            # Add the frame to the notebook and assign the tab's name
+            self.notebook.add(frame, text=page_name)
 
-        self.show_frame("ColourConverterPage")
-
-        # Navigation Buttons
-        button1 = ttk.Button(nav_bar, text="Colour Converter", command=lambda: self.show_frame("ColourConverterPage"))
-        button1.grid(row=0, column=0, padx=75)
-
-        button2 = ttk.Button(nav_bar, text="Colour Gear", command=lambda: self.show_frame("ColourGearPage"))
-        button2.grid(row=0, column=1, padx=75)
-
-        button3 = ttk.Button(nav_bar, text="Colour Grab", command=lambda: self.show_frame("ColourGrabPage"))
-        button3.grid(row=0, column=2, padx=75)
-
-
-    def show_frame(self, page_name):
+    def show_frame(self, page_name: str) -> None:
         """
-         Show frame with given page name. This is equivalent to pressing enter in Tkinter's main window.
-         
-         @param page_name - Name of page to show frame for
+        Show the frame with the given page name.
+
+        @param page_name: The name of the page to show.
         """
-        frame = self.frames[page_name]
-        frame.tkraise()
+        # Lazy load the page if it hasn't been created yet
+        if page_name not in self.frames:
+            if page_name == "Colour Converter":
+                self.create_lazy_page("Colour Converter", ColourConverterPage)
+            elif page_name == "Colour Gear":
+                self.create_lazy_page("Colour Gear", ColourGearPage)
+            elif page_name == "Colour Grab":
+                self.create_lazy_page("Colour Grab", ColourGrabPage)
 
+        # Select the corresponding tab in the notebook
+        self.notebook.select(self.frames[page_name])
 
-# This is a wrapper around MainApplication. mainloop.
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()

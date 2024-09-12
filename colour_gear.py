@@ -140,17 +140,28 @@ class ColourGearPage(ttk.Frame):
         dy = y - center
         comp_x = center - dx
         comp_y = center - dy
-        comp_rgb = self.colour_wheel.getpixel((comp_x, comp_y))
-        return comp_x, comp_y, comp_rgb
+
+        # Ensure that the complementary coordinates are within the bounds of the image
+        if 0 <= comp_x < self.size and 0 <= comp_y < self.size:
+            comp_rgb = self.colour_wheel.getpixel((comp_x, comp_y))
+            return comp_x, comp_y, comp_rgb
+        else:
+            # If out of bounds, return None or a default value
+            return None, None, None
 
     def show_complementary(self, x, y):
         self.clear_harmony_labels()
         comp_x, comp_y, comp_rgb = self.get_complementary_colour(x, y)
-        hex_colour = '#{:02x}{:02x}{:02x}'.format(*comp_rgb)
-        text_colour = self.get_text_colour(comp_rgb)
-        self.placeholders[0].config(text=f"Colour: {hex_colour}", bg=hex_colour, fg=text_colour)
-        self.placeholders[0].grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
-        self.draw_complementary_circle(comp_x, comp_y, comp_rgb)
+
+        if comp_rgb is not None:
+            hex_colour = '#{:02x}{:02x}{:02x}'.format(*comp_rgb)
+            text_colour = self.get_text_colour(comp_rgb)
+            self.placeholders[0].config(text=f"Colour: {hex_colour}", bg=hex_colour, fg=text_colour)
+            self.placeholders[0].grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
+            self.draw_complementary_circle(comp_x, comp_y, comp_rgb)
+        else:
+            # Handle case when complementary colour is out of bounds (no update)
+            pass
 
     def draw_complementary_circle(self, x, y, colour):
         self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, outline="black", width=2, fill='#%02x%02x%02x' % colour, tags="complementary_circle")

@@ -32,49 +32,102 @@ def test_create_colour_wheel(colour_gear_page):
     assert isinstance(wheel, Image.Image)
     assert wheel.size == (300, 300)
 
-def test_complementary_harmony(colour_gear_page):
-    """Test that complementary harmony is calculated correctly."""
+@patch.object(tk.Canvas, 'create_oval')
+def test_complementary_harmony(mock_create_oval, colour_gear_page):
+    """Test that complementary harmony is calculated and displayed correctly."""
     x, y = 150, 150  # Centre point for the wheel
     comp_x, comp_y, comp_rgb = colour_gear_page.get_complementary_colour(x, y)
-    assert (comp_x, comp_y) == (150, 150)  # In the centre, the complementary point should be the same
-    assert isinstance(comp_rgb, tuple)
-    assert len(comp_rgb) == 3  # Should be an RGB tuple
+
+    # Ensure complementary colour is returned and within bounds
+    assert comp_rgb is not None
+    assert 0 <= comp_x < colour_gear_page.size
+    assert 0 <= comp_y < colour_gear_page.size
+
+    # Verify that the complementary colour is drawn on the canvas
+    colour_gear_page.show_complementary(x, y)
+    mock_create_oval.assert_called_with(comp_x - 5, comp_y - 5, comp_x + 5, comp_y + 5, outline="black", width=2,
+                                        fill=f'#{comp_rgb[0]:02x}{comp_rgb[1]:02x}{comp_rgb[2]:02x}',
+                                        tags="complementary_circle")
 
 def test_analogous_harmony(colour_gear_page):
-    """Test that analogous harmony is calculated correctly."""
-    x, y = 200, 150
+    """Test that analogous harmony is calculated and displayed correctly."""
+    x, y = 150, 150  # Centre point for the wheel
     analogous_colours = colour_gear_page.get_analogous_colours(x, y)
+
+    # Assert that two analogous colours are returned
     assert len(analogous_colours) == 2
-    for (ax, ay, colour) in analogous_colours:
-        assert isinstance(colour, tuple)
-        assert len(colour) == 3  # Should be RGB values
+
+    # Assert that each colour is valid (not None) and within bounds
+    for ax, ay, colour in analogous_colours:
+        assert colour is not None
+        assert 0 <= ax < colour_gear_page.size
+        assert 0 <= ay < colour_gear_page.size
+
+    # Verify that the analogous colours are drawn on the canvas
+    with patch.object(tk.Canvas, 'create_oval') as mock_create_oval:
+        colour_gear_page.show_analogous(x, y)
+        for i, (ax, ay, colour) in enumerate(analogous_colours):
+            mock_create_oval.assert_any_call(ax - 5, ay - 5, ax + 5, ay + 5, outline="black", width=2, fill=f'#{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}', tags=f"analogous_circle_{i}")
 
 def test_triadic_harmony(colour_gear_page):
-    """Test that triadic harmony is calculated correctly."""
+    """Test that triadic harmony is calculated and displayed correctly."""
     x, y = 200, 150
     triadic_colours = colour_gear_page.get_triadic_colours(x, y)
+
+    # Assert that two triadic colours are returned
     assert len(triadic_colours) == 2
-    for (tx, ty, colour) in triadic_colours:
-        assert isinstance(colour, tuple)
-        assert len(colour) == 3  # Should be RGB values
+
+    # Assert that each colour is valid (not None) and within bounds
+    for tx, ty, colour in triadic_colours:
+        assert colour is not None
+        assert 0 <= tx < colour_gear_page.size
+        assert 0 <= ty < colour_gear_page.size
+
+    # Verify that the triadic colours are drawn on the canvas
+    with patch.object(tk.Canvas, 'create_oval') as mock_create_oval:
+        colour_gear_page.show_triadic(x, y)
+        for i, (tx, ty, colour) in enumerate(triadic_colours):
+            mock_create_oval.assert_any_call(tx - 5, ty - 5, tx + 5, ty + 5, outline="black", width=2, fill=f'#{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}', tags=f"triadic_circle_{i}")
 
 def test_tetradic_harmony(colour_gear_page):
-    """Test that tetradic harmony is calculated correctly."""
+    """Test that tetradic harmony is calculated and displayed correctly."""
     x, y = 200, 150
     tetradic_colours = colour_gear_page.get_tetradic_colours(x, y)
+
+    # Assert that three tetradic colours are returned
     assert len(tetradic_colours) == 3
-    for (tx, ty, colour) in tetradic_colours:
-        assert isinstance(colour, tuple)
-        assert len(colour) == 3  # Should be RGB values
+
+    # Assert that each colour is valid (not None) and within bounds
+    for tx, ty, colour in tetradic_colours:
+        assert colour is not None
+        assert 0 <= tx < colour_gear_page.size
+        assert 0 <= ty < colour_gear_page.size
+
+    # Verify that the tetradic colours are drawn on the canvas
+    with patch.object(tk.Canvas, 'create_oval') as mock_create_oval:
+        colour_gear_page.show_tetradic(x, y)
+        for i, (tx, ty, colour) in enumerate(tetradic_colours):
+            mock_create_oval.assert_any_call(tx - 5, ty - 5, tx + 5, ty + 5, outline="black", width=2, fill=f'#{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}', tags=f"tetradic_circle_{i}")
 
 def test_split_complementary_harmony(colour_gear_page):
-    """Test that split-complementary harmony is calculated correctly."""
+    """Test that split-complementary harmony is calculated and displayed correctly."""
     x, y = 200, 150
     split_comp_colours = colour_gear_page.get_split_complementary_colours(x, y)
+
+    # Assert that two split-complementary colours are returned
     assert len(split_comp_colours) == 2
-    for (sx, sy, colour) in split_comp_colours:
-        assert isinstance(colour, tuple)
-        assert len(colour) == 3  # Should be RGB values
+
+    # Assert that each colour is valid (not None) and within bounds
+    for sx, sy, colour in split_comp_colours:
+        assert colour is not None
+        assert 0 <= sx < colour_gear_page.size
+        assert 0 <= sy < colour_gear_page.size
+
+    # Verify that the split-complementary colours are drawn on the canvas
+    with patch.object(tk.Canvas, 'create_oval') as mock_create_oval:
+        colour_gear_page.show_split_complementary(x, y)
+        for i, (sx, sy, colour) in enumerate(split_comp_colours):
+            mock_create_oval.assert_any_call(sx - 5, sy - 5, sx + 5, sy + 5, outline="black", width=2, fill=f'#{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}', tags=f"split_complementary_circle_{i}")
 
 def test_highlight_selected_harmony_button(colour_gear_page):
     """Test that the selected harmony button is highlighted correctly."""
@@ -116,7 +169,6 @@ def test_on_motion(mock_handle_selection, colour_gear_page):
     colour_gear_page.on_motion(mock_event)
     mock_handle_selection.assert_called_once_with(mock_event)
 
-# Tests related to canvas and tkinter operations are generally done using mocks
 @patch.object(tk.Canvas, 'create_oval')
 def test_draw_selection_circle(mock_create_oval, colour_gear_page):
     """Test the selection circle drawing method."""

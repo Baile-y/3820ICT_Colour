@@ -6,7 +6,6 @@ import numpy as np
 from colour_grab import ColourGrabPage
 from sklearn.cluster import KMeans
 
-
 @pytest.fixture(scope="session")
 def tkinter_root():
     """Fixture to create a single Tkinter root window for all tests in the session."""
@@ -15,7 +14,6 @@ def tkinter_root():
     yield root
     root.quit()  # Ensure the Tkinter main loop quits at the end of the session
     root.destroy()  # Destroy the root window after all tests have run
-
 
 @pytest.fixture
 def setup_colour_grab_page(mocker, tkinter_root):
@@ -31,7 +29,6 @@ def setup_colour_grab_page(mocker, tkinter_root):
 
     yield page
 
-
 def test_initial_state(setup_colour_grab_page):
     """Test initial state of ColourGrabPage."""
     page = setup_colour_grab_page
@@ -39,7 +36,6 @@ def test_initial_state(setup_colour_grab_page):
     assert page.num_colours.get() == 5
     assert page.cap is None
     assert page.error_label.cget("text") in ["", " "]
-
 
 def test_switch_mode_to_webcam(setup_colour_grab_page, mocker):
     """Test switching mode to 'Webcam'."""
@@ -58,7 +54,6 @@ def test_switch_mode_to_webcam(setup_colour_grab_page, mocker):
     assert page.mode.get() == "Webcam"
     assert page.cap is None or not page.cap.isOpened()  # Webcam shouldn't open in the mock setup
 
-
 def test_switch_mode_to_image(setup_colour_grab_page):
     """Test switching mode to 'Image'."""
     page = setup_colour_grab_page
@@ -72,7 +67,6 @@ def test_switch_mode_to_image(setup_colour_grab_page):
     # Test the logic after mode switch
     assert page.mode.get() == "Image"
     assert page.cap is None  # No webcam should be active in image mode
-
 
 def test_image_submit_valid(setup_colour_grab_page, mocker):
     """Test submitting a valid image."""
@@ -93,7 +87,6 @@ def test_image_submit_valid(setup_colour_grab_page, mocker):
     assert page.error_label.cget("text") == ""
     assert page.palette_canvas.find_all()  # Palette is drawn on the canvas
 
-
 def test_image_submit_invalid(setup_colour_grab_page, mocker):
     """Test submitting an invalid image path."""
     page = setup_colour_grab_page
@@ -107,7 +100,6 @@ def test_image_submit_invalid(setup_colour_grab_page, mocker):
     # Ensure the error message is set
     assert page.error_label.cget("text") == "File not found. Please check the path."
 
-
 def test_image_submit_empty_path(setup_colour_grab_page):
     """Test submitting an empty file path."""
     page = setup_colour_grab_page
@@ -115,14 +107,12 @@ def test_image_submit_empty_path(setup_colour_grab_page):
     page.imageSubmit()
     assert page.error_label.cget("text") == "File not found. Please check the path."
 
-
 def test_image_resizing(setup_colour_grab_page):
     """Test the image resizing functionality."""
     page = setup_colour_grab_page
     mock_image = Image.new('RGB', (1000, 1000))  # Create a large mock image
     resized_image = page._resize_image(mock_image)
     assert resized_image.size == (500, 500)  # Check that the image is resized correctly
-
 
 def test_webcam_submit_with_webcam(setup_colour_grab_page, mocker):
     """Test submitting a valid frame from the webcam."""
@@ -151,7 +141,6 @@ def test_webcam_submit_with_webcam(setup_colour_grab_page, mocker):
     assert mock_capture.return_value.read.call_count == 1
     assert page.error_label.cget("text") == ""  # Ensure no error occurred
 
-
 def test_webcam_submit_no_webcam(setup_colour_grab_page, mocker):
     """Test webcam submission when no webcam is available."""
     page = setup_colour_grab_page
@@ -166,7 +155,6 @@ def test_webcam_submit_no_webcam(setup_colour_grab_page, mocker):
     # Ensure the appropriate error is displayed when webcam is not available
     assert page.error_label.cget("text") == "Webcam is not initialized."
 
-
 def test_webcam_submit_failed_frame(setup_colour_grab_page, mocker):
     """Test webcam submission failure when frame reading fails."""
     page = setup_colour_grab_page
@@ -180,7 +168,6 @@ def test_webcam_submit_failed_frame(setup_colour_grab_page, mocker):
     page.webcamSubmit()
 
     assert page.error_label.cget("text") == "Failed to capture image from webcam."
-
 
 def test_colour_extraction(setup_colour_grab_page, mocker):
     """Test the colour extraction logic."""
@@ -206,7 +193,6 @@ def test_colour_extraction(setup_colour_grab_page, mocker):
     # Assert the correct number of colours were returned (should match page.num_colours.get())
     assert len(colours) == page.num_colours.get()
 
-
 def test_colour_extraction_failure(setup_colour_grab_page, mocker):
     """Test KMeans failure during colour extraction."""
     page = setup_colour_grab_page
@@ -217,7 +203,6 @@ def test_colour_extraction_failure(setup_colour_grab_page, mocker):
 
     assert page.error_label.cget("text") == "Error during colour extraction: Clustering error"
     assert colours == []  # Ensure no colours are returned in case of error
-
 
 def test_display_palette(setup_colour_grab_page, mocker):
     """Test that the colour palette is displayed correctly."""
@@ -230,7 +215,6 @@ def test_display_palette(setup_colour_grab_page, mocker):
 
     # Ensure that the palette was drawn on the canvas
     assert page.palette_canvas.find_all()  # Check if shapes are drawn on the canvas
-
 
 def test_copy_to_clipboard(setup_colour_grab_page, mocker):
     """Test that the hex code is copied to the clipboard."""

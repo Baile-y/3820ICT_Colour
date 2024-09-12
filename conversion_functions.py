@@ -12,7 +12,6 @@ def validate_rgb(r, g, b):
     if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
         raise ValueError(f"Invalid RGB value: ({r}, {g}, {b}). Each value must be between 0 and 255.")
 
-
 def validate_hsl(h, s, l):
     """
     Validate HSL values to ensure hue is between 0 and 360, and saturation and lightness are between 0 and 100.
@@ -30,7 +29,6 @@ def validate_hsl(h, s, l):
         raise ValueError(f"Invalid saturation value: {s}. Must be in the range [0, 100].")
     if not (0 <= l <= 100):
         raise ValueError(f"Invalid lightness value: {l}. Must be in the range [0, 100].")
-
 
 def validate_hsv(h, s, v):
     """
@@ -50,7 +48,6 @@ def validate_hsv(h, s, v):
     if not (0 <= v <= 100):
         raise ValueError(f"Invalid value: {v}. Must be in the range [0, 100].")
 
-
 def validate_cmyk(c, m, y, k):
     """
     Validate CMYK values to ensure all values are between 0 and 1.
@@ -66,7 +63,6 @@ def validate_cmyk(c, m, y, k):
     if not (0 <= c <= 1 and 0 <= m <= 1 and 0 <= y <= 1 and 0 <= k <= 1):
         raise ValueError(f"Invalid CMYK value: ({c}, {m}, {y}, {k}). Each value must be between 0 and 1.")
 
-
 # RGB to HEX
 def rgb_to_hex(r, g, b):
     """
@@ -80,7 +76,6 @@ def rgb_to_hex(r, g, b):
     """
     validate_rgb(r, g, b)
     return '#{:02X}{:02X}{:02X}'.format(r, g, b)
-
 
 # HEX to RGB
 def hex_to_rgb(hex_value):
@@ -101,7 +96,6 @@ def hex_to_rgb(hex_value):
     except ValueError:
         raise ValueError(f"Invalid hex color: {hex_value}. Contains non-hexadecimal characters.")
 
-
 # CMYK to RGB
 def cmyk_to_rgb(c, m, y, k):
     """
@@ -118,7 +112,6 @@ def cmyk_to_rgb(c, m, y, k):
     g = 255 * (1 - m) * (1 - k)
     b = 255 * (1 - y) * (1 - k)
     return int(round(r)), int(round(g)), int(round(b))
-
 
 # HSL to RGB
 def hsl_to_rgb(h, s, l):
@@ -155,7 +148,6 @@ def hsl_to_rgb(h, s, l):
     r, g, b = [(val + m) * 255 for val in rgb]
     return int(round(r)), int(round(g)), int(round(b))
 
-
 # HSV to RGB
 def hsv_to_rgb(h, s, v):
     """
@@ -191,7 +183,6 @@ def hsv_to_rgb(h, s, v):
     r, g, b = [(val + m) * 255 for val in rgb]
     return int(round(r)), int(round(g)), int(round(b))
 
-
 # RGB to CMYK
 def rgb_to_cmyk(r, g, b):
     """
@@ -212,7 +203,6 @@ def rgb_to_cmyk(r, g, b):
     m = (1 - g_prime - k) / (1 - k)
     y = (1 - b_prime - k) / (1 - k)
     return round(c, 2), round(m, 2), round(y, 2), round(k, 2)
-
 
 # RGB to HSL
 def rgb_to_hsl(r, g, b):
@@ -246,7 +236,6 @@ def rgb_to_hsl(r, g, b):
         h /= 6
 
     return round(h * 360), round(s * 100), round(l * 100)
-
 
 # RGB to HSV
 def rgb_to_hsv(r, g, b):
