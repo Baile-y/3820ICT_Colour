@@ -16,6 +16,9 @@ class ColourGearPage(ttk.Frame):
         self.colour_wheel = self.create_colour_wheel(self.size)
         self.colour_wheel_tk = ImageTk.PhotoImage(self.colour_wheel)
 
+        # Ensure the image object is held in memory
+        self.image_cache = self.colour_wheel_tk
+
         # Create the canvas for the colour wheel
         self.canvas = Canvas(self, width=self.size, height=self.size)
         self.canvas.create_image((self.size // 2, self.size // 2), image=self.colour_wheel_tk)
