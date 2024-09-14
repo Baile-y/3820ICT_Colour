@@ -1,0 +1,10 @@
+[run]
+omit =
+    tests/*
+    */test_*.py
+
+[report]
+exclude_lines =
+    # Ignore debug lines
+    if __name__ == '__main__':
+    pragma: no cover
