@@ -14,6 +14,8 @@ Download Python | https://www.python.org/downloads/
 
 <h3>Installation & Running</h3>
 
+This is a video demonstration of how to get the program running: https://youtu.be/m3dip8M3PeE
+
 Firstly, create a folder where you want to setup the application and environments. 
 
 Using VS Code (Visual Studio Code), open the terminal within and enter the following command: 
